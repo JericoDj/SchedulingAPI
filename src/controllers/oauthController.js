@@ -1,12 +1,31 @@
 const { facebookAppId, facebookAppSecret, facebookRedirectUri } = require('../config/env');
 
+const isLocalHost = (host) => {
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+};
+
+const enforceHttpsForPublicUrl = (urlString) => {
+  try {
+    const parsed = new URL(urlString);
+    if (parsed.protocol === 'http:' && !isLocalHost(parsed.hostname)) {
+      parsed.protocol = 'https:';
+    }
+    return parsed.toString();
+  } catch (_) {
+    return urlString;
+  }
+};
+
 const getBaseUrl = (req) => {
   const host = req.get('host');
-  return `${req.protocol}://${host}`;
+  const forwardedProto = req.get('x-forwarded-proto');
+  const protocol = (forwardedProto || req.protocol || 'http').split(',')[0].trim();
+  return `${protocol}://${host}`;
 };
 
 const getEffectiveFacebookRedirectUri = (req) => {
-  return facebookRedirectUri || `${getBaseUrl(req)}/api/oauth/facebook/callback`;
+  const redirectUri = facebookRedirectUri || `${getBaseUrl(req)}/api/oauth/facebook/callback`;
+  return enforceHttpsForPublicUrl(redirectUri);
 };
 
 const getCallbackRedirect = (req) => {
