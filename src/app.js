@@ -28,6 +28,10 @@ app.use(morgan(nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/', (req, res) => {
+  res.send('Welcome to Post Scheduler');
+});
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
