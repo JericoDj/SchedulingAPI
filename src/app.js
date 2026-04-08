@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 
-const { clientUrl, deployment, nodeEnv } = require('./config/env');
+const { deployment, nodeEnv } = require('./config/env');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -15,16 +15,14 @@ const oauthRoutes = require('./routes/oauthRoutes');
 
 const app = express();
 
-const corsOptions =
-  clientUrl === '*'
-    ? { origin: true }
-    : {
-        origin: clientUrl,
-        credentials: true,
-      };
+const corsOptions = {
+  origin: true,
+  credentials: true,
+};
 
 app.disable('x-powered-by');
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(helmet());
 app.use(morgan(nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
