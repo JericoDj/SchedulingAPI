@@ -1,0 +1,8 @@
+
+> paintoutlet-ai-backend@1.0.0 start
+> node src/server.js
+
+API running on port 5000 in development mode
+[0mGET /api/oauth/facebook?redirect=http%3A%2F%2Flocalhost%3A3003%2Foauth%2Fcallback [36m302[0m 3.163 ms - 294[0m
+[0mGET /api/health [32m200[0m 3.507 ms - 64[0m
+[0mGET /api/oauth/facebook?redirect=http%3A%2F%2Flocalhost%3A3003%2Foauth%2Fcallback [36m302[0m 0.832 ms - 294[0m
