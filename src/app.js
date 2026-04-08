@@ -20,6 +20,9 @@ const corsOptions = {
   credentials: true,
 };
 
+
+
+
 app.disable('x-powered-by');
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
