@@ -74,8 +74,56 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   res.status(200).json(req.user);
 });
 
+const verifyFacebookLogin = asyncHandler(async (req, res) => {
+  const { accessToken, userID } = req.body;
+
+  if (!accessToken || !userID) {
+    res.status(400);
+    throw new Error('Access token and userID are required');
+  }
+
+  // Verify the token by fetching user profile from Facebook
+  const response = await fetch(`https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email,picture`);
+  
+  if (!response.ok) {
+    res.status(401);
+    throw new Error('Invalid Facebook token');
+  }
+
+  const fbUser = await response.json();
+
+  if (fbUser.id !== userID) {
+    res.status(401);
+    throw new Error('Facebook User ID mismatch');
+  }
+
+  // Check if user exists by email, if not create a new user
+  const email = fbUser.email || `${fbUser.id}@facebook.com`;
+  let user = await userModel.findByEmail(email);
+
+  if (!user) {
+    const randomPassword = await bcrypt.hash(Math.random().toString(36).slice(-10), 10);
+    user = await userModel.create({
+      name: fbUser.name,
+      email: email,
+      passwordHash: randomPassword,
+      avatar_url: fbUser.picture?.data?.url || null,
+    });
+  } else {
+    // If user model needs password_hash removed before sending
+    delete user.password_hash;
+  }
+
+  res.status(200).json({
+    message: 'Facebook login successful',
+    token: generateToken(user.id),
+    user,
+  });
+});
+
 module.exports = {
   register,
   login,
+  verifyFacebookLogin,
   getCurrentUser,
 };
