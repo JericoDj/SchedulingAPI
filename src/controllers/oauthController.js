@@ -63,7 +63,7 @@ const facebookAuth = (req, res) => {
     client_id: facebookAppId,
     redirect_uri: redirectUri,
     response_type: 'code',
-    scope: 'public_profile',
+    scope: 'public_profile,email',
   });
 
   if (state) {
