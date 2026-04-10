@@ -14,7 +14,7 @@ const env = {
   facebookAppSecret: process.env.FACEBOOK_APP_SECRET,
   facebookRedirectUri: process.env.FACEBOOK_REDIRECT_URI,
   facebookScopes:
-    process.env.FACEBOOK_SCOPES || 'public_profile,business_management',
+    process.env.FACEBOOK_SCOPES || 'public_profile,business_management,pages_manage_posts,pages_read_engagement',
 };
 
 const validateEnv = () => {
