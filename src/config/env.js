@@ -20,7 +20,7 @@ const env = {
   instagramRedirectUri: process.env.INSTAGRAM_REDIRECT_URI,
   instagramScopes:
     process.env.INSTAGRAM_SCOPES ||
-    'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement',
+    'instagram_business_basic,instagram_business_content_publish,pages_show_list,pages_read_engagement,pages_manage_posts',
 };
 
 const validateEnv = () => {
