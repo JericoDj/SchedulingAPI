@@ -13,6 +13,8 @@ const env = {
   facebookAppId: process.env.FACEBOOK_APP_ID,
   facebookAppSecret: process.env.FACEBOOK_APP_SECRET,
   facebookRedirectUri: process.env.FACEBOOK_REDIRECT_URI,
+  facebookScopes:
+    process.env.FACEBOOK_SCOPES || 'public_profile,business_management',
 };
 
 const validateEnv = () => {

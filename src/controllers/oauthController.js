@@ -1,4 +1,9 @@
-const { facebookAppId, facebookAppSecret, facebookRedirectUri } = require('../config/env');
+const {
+  facebookAppId,
+  facebookAppSecret,
+  facebookRedirectUri,
+  facebookScopes,
+} = require('../config/env');
 
 const isLocalHost = (host) => {
   return host === 'localhost' || host === '127.0.0.1' || host === '::1';
@@ -63,7 +68,7 @@ const facebookAuth = (req, res) => {
     client_id: facebookAppId,
     redirect_uri: redirectUri,
     response_type: 'code',
-    scope: 'public_profile,email,business_management'
+    scope: facebookScopes,
   });
 
   if (state) {
