@@ -3,6 +3,7 @@ const {
   facebookAppSecret,
   facebookRedirectUri,
   facebookScopes,
+  graphApiVersion,
   instagramAppId,
   instagramAppSecret,
   instagramRedirectUri,
@@ -91,7 +92,7 @@ const exchangeCodeForToken = async ({
   redirectUri,
   code,
 }) => {
-  const tokenUrl = 'https://graph.facebook.com/v19.0/oauth/access_token';
+  const tokenUrl = `https://graph.facebook.com/${graphApiVersion}/oauth/access_token`;
   const params = new URLSearchParams({
     client_id: appId,
     redirect_uri: redirectUri,
@@ -207,7 +208,7 @@ const facebookAuth = (req, res) => {
     params.set('state', state);
   }
 
-  const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?${params.toString()}`;
+  const authUrl = `https://www.facebook.com/${graphApiVersion}/dialog/oauth?${params.toString()}`;
   res.redirect(authUrl);
 };
 
@@ -248,7 +249,7 @@ const instagramAuth = (req, res) => {
     params.set('state', state);
   }
 
-  const authUrl = `https://www.facebook.com/v19.0/dialog/oauth?${params.toString()}`;
+  const authUrl = `https://www.facebook.com/${graphApiVersion}/dialog/oauth?${params.toString()}`;
   return res.redirect(authUrl);
 };
 

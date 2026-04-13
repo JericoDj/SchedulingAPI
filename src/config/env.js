@@ -10,6 +10,7 @@ const env = {
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   clientUrl: process.env.CLIENT_URL || '*',
+  graphApiVersion: process.env.GRAPH_API_VERSION || 'v24.0',
   facebookAppId: process.env.FACEBOOK_APP_ID,
   facebookAppSecret: process.env.FACEBOOK_APP_SECRET,
   facebookRedirectUri: process.env.FACEBOOK_REDIRECT_URI,
@@ -20,7 +21,7 @@ const env = {
   instagramRedirectUri: process.env.INSTAGRAM_REDIRECT_URI,
   instagramScopes:
     process.env.INSTAGRAM_SCOPES ||
-    'instagram_business_basic,instagram_business_content_publish,pages_show_list,pages_read_engagement,pages_manage_posts',
+    'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement',
 };
 
 const validateEnv = () => {
