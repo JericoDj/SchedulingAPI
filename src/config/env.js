@@ -22,6 +22,11 @@ const env = {
   instagramScopes:
     process.env.INSTAGRAM_SCOPES ||
     'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement',
+  threadsAppId: process.env.THREADS_APP_ID,
+  threadsAppSecret: process.env.THREADS_APP_SECRET,
+  threadsRedirectUri: process.env.THREADS_REDIRECT_URI,
+  threadsScopes:
+    process.env.THREADS_SCOPES || 'threads_basic,threads_content_publish',
 };
 
 const validateEnv = () => {

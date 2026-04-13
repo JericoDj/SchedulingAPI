@@ -8,6 +8,10 @@ const {
   instagramAppSecret,
   instagramRedirectUri,
   instagramScopes,
+  threadsAppId,
+  threadsAppSecret,
+  threadsRedirectUri,
+  threadsScopes,
 } = require('../config/env');
 
 const isLocalHost = (host) => {
@@ -40,6 +44,11 @@ const getEffectiveFacebookRedirectUri = (req) => {
 
 const getEffectiveInstagramRedirectUri = (req) => {
   const redirectUri = instagramRedirectUri || `${getBaseUrl(req)}/api/oauth/instagram/callback`;
+  return enforceHttpsForPublicUrl(redirectUri);
+};
+
+const getEffectiveThreadsRedirectUri = (req) => {
+  const redirectUri = threadsRedirectUri || `${getBaseUrl(req)}/api/oauth/threads/callback`;
   return enforceHttpsForPublicUrl(redirectUri);
 };
 
@@ -105,6 +114,32 @@ const exchangeCodeForToken = async ({
   return { response, data };
 };
 
+const exchangeThreadsCodeForToken = async ({
+  appId,
+  appSecret,
+  redirectUri,
+  code,
+}) => {
+  const tokenUrl = 'https://graph.threads.net/oauth/access_token';
+  const params = new URLSearchParams({
+    client_id: appId,
+    client_secret: appSecret,
+    grant_type: 'authorization_code',
+    redirect_uri: redirectUri,
+    code,
+  });
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+  const data = await response.json();
+  return { response, data };
+};
+
 const handleOAuthCallback = async ({
   req,
   res,
@@ -113,6 +148,7 @@ const handleOAuthCallback = async ({
   appSecretEnvKey,
   appId,
   getRedirectUri,
+  exchangeFn = exchangeCodeForToken,
 }) => {
   const { code, error, error_description, state } = req.query;
   const parsedState = fromState(state);
@@ -157,7 +193,7 @@ const handleOAuthCallback = async ({
   }
 
   const redirectUri = getRedirectUri(req);
-  const { response, data } = await exchangeCodeForToken({
+  const { response, data } = await exchangeFn({
     appId,
     appSecret,
     redirectUri,
@@ -270,9 +306,53 @@ const instagramCallback = async (req, res) => {
   }
 };
 
+const threadsAuth = (req, res) => {
+  if (!threadsAppId) {
+    return res.status(500).json({ message: 'THREADS_APP_ID is not configured' });
+  }
+
+  const redirectUri = getEffectiveThreadsRedirectUri(req);
+  const callbackRedirect = getCallbackRedirect(req);
+  const state = callbackRedirect ? toState({ redirect: callbackRedirect }) : undefined;
+
+  const params = new URLSearchParams({
+    client_id: threadsAppId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: threadsScopes,
+  });
+
+  if (state) {
+    params.set('state', state);
+  }
+
+  const authUrl = `https://www.threads.net/oauth/authorize?${params.toString()}`;
+  return res.redirect(authUrl);
+};
+
+const threadsCallback = async (req, res) => {
+  try {
+    return await handleOAuthCallback({
+      req,
+      res,
+      provider: 'threads',
+      appSecret: threadsAppSecret,
+      appSecretEnvKey: 'THREADS_APP_SECRET',
+      appId: threadsAppId,
+      getRedirectUri: getEffectiveThreadsRedirectUri,
+      exchangeFn: exchangeThreadsCodeForToken,
+    });
+  } catch (err) {
+    console.error('Threads OAuth Callback Error:', err);
+    res.status(500).json({ message: 'Internal server error during authentication' });
+  }
+};
+
 module.exports = {
   facebookAuth,
   facebookCallback,
   instagramAuth,
   instagramCallback,
+  threadsAuth,
+  threadsCallback,
 };
