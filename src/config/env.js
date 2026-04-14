@@ -40,7 +40,8 @@ const env = {
   tiktokClientSecret: cleanEnvValue(process.env.TIKTOK_CLIENT_SECRET),
   tiktokRedirectUri: cleanEnvValue(process.env.TIKTOK_REDIRECT_URI),
   tiktokScopes:
-    process.env.TIKTOK_SCOPES || 'user.info.basic,video.upload,video.publish',
+    process.env.TIKTOK_SCOPES ||
+    'user.info.basic,user.info.profile,user.info.stats,video.list,video.upload,video.publish',
 };
 
 const validateEnv = () => {
