@@ -12,7 +12,12 @@ const {
   threadsAppSecret,
   threadsRedirectUri,
   threadsScopes,
+  tiktokClientKey,
+  tiktokClientSecret,
+  tiktokRedirectUri,
+  tiktokScopes,
 } = require('../config/env');
+const crypto = require('crypto');
 
 const isLocalHost = (host) => {
   return host === 'localhost' || host === '127.0.0.1' || host === '::1';
@@ -49,6 +54,11 @@ const getEffectiveInstagramRedirectUri = (req) => {
 
 const getEffectiveThreadsRedirectUri = (req) => {
   const redirectUri = threadsRedirectUri || `${getBaseUrl(req)}/api/oauth/threads/callback`;
+  return enforceHttpsForPublicUrl(redirectUri);
+};
+
+const getEffectiveTikTokRedirectUri = (req) => {
+  const redirectUri = tiktokRedirectUri || `${getBaseUrl(req)}/api/oauth/tiktok/callback`;
   return enforceHttpsForPublicUrl(redirectUri);
 };
 
@@ -140,6 +150,60 @@ const exchangeThreadsCodeForToken = async ({
   return { response, data };
 };
 
+const exchangeTikTokCodeForToken = async ({
+  appId,
+  appSecret,
+  redirectUri,
+  code,
+}) => {
+  const tokenUrl = 'https://open.tiktokapis.com/v2/oauth/token/';
+  const params = new URLSearchParams({
+    client_key: appId,
+    client_secret: appSecret,
+    code,
+    grant_type: 'authorization_code',
+    redirect_uri: redirectUri,
+  });
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+  const data = await response.json();
+  return { response, data };
+};
+
+const decodeThreadsSignedRequest = (signedRequest, appSecret) => {
+  if (!signedRequest || typeof signedRequest !== 'string') {
+    return null;
+  }
+
+  const [encodedSig, encodedPayload] = signedRequest.split('.');
+  if (!encodedSig || !encodedPayload) {
+    return null;
+  }
+
+  const signature = Buffer.from(encodedSig, 'base64url');
+  const expected = crypto
+    .createHmac('sha256', appSecret || '')
+    .update(encodedPayload)
+    .digest();
+
+  if (signature.length !== expected.length || !crypto.timingSafeEqual(signature, expected)) {
+    return null;
+  }
+
+  try {
+    const payloadJson = Buffer.from(encodedPayload, 'base64url').toString('utf8');
+    return JSON.parse(payloadJson);
+  } catch (_) {
+    return null;
+  }
+};
+
 const handleOAuthCallback = async ({
   req,
   res,
@@ -149,6 +213,8 @@ const handleOAuthCallback = async ({
   appId,
   getRedirectUri,
   exchangeFn = exchangeCodeForToken,
+  normalizeTokenData = (data) => data,
+  getErrorFromData = () => null,
 }) => {
   const { code, error, error_description, state } = req.query;
   const parsedState = fromState(state);
@@ -200,27 +266,34 @@ const handleOAuthCallback = async ({
     code,
   });
 
-  if (!response.ok) {
+  const dataError = getErrorFromData(data);
+
+  if (!response.ok || dataError) {
+    const errorCode = dataError?.error || 'token_exchange_failed';
+    const errorDescription = dataError?.description || JSON.stringify(data);
     if (frontendRedirect) {
       return res.redirect(
         buildFrontendErrorRedirect(
           frontendRedirect,
           provider,
-          'token_exchange_failed',
-          encodeURIComponent(JSON.stringify(data))
+          errorCode,
+          errorDescription
         )
       );
     }
     return res.status(response.status).json({ message: 'Error exchanging token', details: data });
   }
 
+  const tokenData = normalizeTokenData(data);
+
   if (frontendRedirect) {
-    return res.redirect(buildFrontendSuccessRedirect(frontendRedirect, provider, data));
+    return res.redirect(buildFrontendSuccessRedirect(frontendRedirect, provider, tokenData));
   }
 
   return res.status(200).json({
     message: `Successfully authenticated with ${provider}`,
-    tokenData: data,
+    tokenData,
+    rawTokenData: tokenData === data ? undefined : data,
   });
 };
 
@@ -348,6 +421,104 @@ const threadsCallback = async (req, res) => {
   }
 };
 
+const threadsUninstallCallback = (req, res) => {
+  const signedRequest = req.body?.signed_request || req.query?.signed_request;
+  const payload = decodeThreadsSignedRequest(signedRequest, threadsAppSecret);
+
+  console.log('Threads uninstall callback received', {
+    hasPayload: Boolean(payload),
+    userId: payload?.user_id || null,
+    issuedAt: payload?.issued_at || null,
+  });
+
+  return res.status(200).json({ success: true });
+};
+
+const threadsDeleteCallback = (req, res) => {
+  const signedRequest = req.body?.signed_request || req.query?.signed_request;
+  const payload = decodeThreadsSignedRequest(signedRequest, threadsAppSecret);
+  const confirmationCode = crypto.randomBytes(8).toString('hex');
+  const statusUrl = `${getBaseUrl(req)}/api/oauth/threads/delete/status?code=${confirmationCode}`;
+
+  console.log('Threads delete callback received', {
+    hasPayload: Boolean(payload),
+    userId: payload?.user_id || null,
+    issuedAt: payload?.issued_at || null,
+    confirmationCode,
+  });
+
+  return res.status(200).json({
+    url: statusUrl,
+    confirmation_code: confirmationCode,
+  });
+};
+
+const threadsDeleteStatus = (req, res) => {
+  const code = req.query.code || 'unknown';
+  return res.status(200).json({
+    status: 'completed',
+    confirmation_code: code,
+  });
+};
+
+const tiktokAuth = (req, res) => {
+  if (!tiktokClientKey) {
+    return res.status(500).json({ message: 'TIKTOK_CLIENT_KEY is not configured' });
+  }
+
+  const redirectUri = getEffectiveTikTokRedirectUri(req);
+  const callbackRedirect = getCallbackRedirect(req);
+  const state = callbackRedirect ? toState({ redirect: callbackRedirect }) : undefined;
+
+  const params = new URLSearchParams({
+    client_key: tiktokClientKey,
+    scope: tiktokScopes,
+    response_type: 'code',
+    redirect_uri: redirectUri,
+    state: state || crypto.randomBytes(8).toString('hex'),
+  });
+
+  const authUrl = `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
+  return res.redirect(authUrl);
+};
+
+const tiktokCallback = async (req, res) => {
+  try {
+    return await handleOAuthCallback({
+      req,
+      res,
+      provider: 'tiktok',
+      appSecret: tiktokClientSecret,
+      appSecretEnvKey: 'TIKTOK_CLIENT_SECRET',
+      appId: tiktokClientKey,
+      getRedirectUri: getEffectiveTikTokRedirectUri,
+      exchangeFn: exchangeTikTokCodeForToken,
+      normalizeTokenData: (data) => data?.data || data,
+      getErrorFromData: (data) => {
+        if (!data) {
+          return null;
+        }
+        if (data.error) {
+          return {
+            error: String(data.error),
+            description: data.error_description || JSON.stringify(data),
+          };
+        }
+        if (typeof data.error_code === 'number' && data.error_code !== 0) {
+          return {
+            error: String(data.error_code),
+            description: data.error || data.description || JSON.stringify(data),
+          };
+        }
+        return null;
+      },
+    });
+  } catch (err) {
+    console.error('TikTok OAuth Callback Error:', err);
+    res.status(500).json({ message: 'Internal server error during authentication' });
+  }
+};
+
 module.exports = {
   facebookAuth,
   facebookCallback,
@@ -355,4 +526,9 @@ module.exports = {
   instagramCallback,
   threadsAuth,
   threadsCallback,
+  threadsUninstallCallback,
+  threadsDeleteCallback,
+  threadsDeleteStatus,
+  tiktokAuth,
+  tiktokCallback,
 };

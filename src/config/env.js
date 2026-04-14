@@ -27,6 +27,11 @@ const env = {
   threadsRedirectUri: process.env.THREADS_REDIRECT_URI,
   threadsScopes:
     process.env.THREADS_SCOPES || 'threads_basic,threads_content_publish',
+  tiktokClientKey: process.env.TIKTOK_CLIENT_KEY || process.env.TIKTOK_APP_ID,
+  tiktokClientSecret: process.env.TIKTOK_CLIENT_SECRET || process.env.TIKTOK_APP_SECRET,
+  tiktokRedirectUri: process.env.TIKTOK_REDIRECT_URI,
+  tiktokScopes:
+    process.env.TIKTOK_SCOPES || 'user.info.basic,video.upload,video.publish',
 };
 
 const validateEnv = () => {
