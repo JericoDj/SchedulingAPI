@@ -155,6 +155,7 @@ const exchangeTikTokCodeForToken = async ({
   appSecret,
   redirectUri,
   code,
+  codeVerifier,
 }) => {
   const tokenUrl = 'https://open.tiktokapis.com/v2/oauth/token/';
   const params = new URLSearchParams({
@@ -164,6 +165,10 @@ const exchangeTikTokCodeForToken = async ({
     grant_type: 'authorization_code',
     redirect_uri: redirectUri,
   });
+
+  if (codeVerifier) {
+    params.set('code_verifier', codeVerifier);
+  }
 
   const response = await fetch(tokenUrl, {
     method: 'POST',
@@ -215,6 +220,7 @@ const handleOAuthCallback = async ({
   exchangeFn = exchangeCodeForToken,
   normalizeTokenData = (data) => data,
   getErrorFromData = () => null,
+  getExchangeArgs = () => ({}),
 }) => {
   const { code, error, error_description, state } = req.query;
   const parsedState = fromState(state);
@@ -264,6 +270,7 @@ const handleOAuthCallback = async ({
     appSecret,
     redirectUri,
     code,
+    ...getExchangeArgs(req),
   });
 
   const dataError = getErrorFromData(data);
@@ -468,14 +475,23 @@ const tiktokAuth = (req, res) => {
 
   const redirectUri = getEffectiveTikTokRedirectUri(req);
   const callbackRedirect = getCallbackRedirect(req);
-  const state = callbackRedirect ? toState({ redirect: callbackRedirect }) : undefined;
+  const nonce = crypto.randomBytes(8).toString('hex');
+  const codeVerifier = crypto.randomBytes(32).toString('hex');
+  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('hex');
+  const state = toState({
+    nonce,
+    redirect: callbackRedirect || undefined,
+    codeVerifier,
+  });
 
   const params = new URLSearchParams({
     client_key: tiktokClientKey,
     scope: tiktokScopes,
     response_type: 'code',
     redirect_uri: redirectUri,
-    state: state || crypto.randomBytes(8).toString('hex'),
+    state,
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
   });
 
   const authUrl = `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
@@ -493,6 +509,12 @@ const tiktokCallback = async (req, res) => {
       appId: tiktokClientKey,
       getRedirectUri: getEffectiveTikTokRedirectUri,
       exchangeFn: exchangeTikTokCodeForToken,
+      getExchangeArgs: (request) => {
+        const parsedState = fromState(request.query.state);
+        return parsedState?.codeVerifier
+          ? { codeVerifier: parsedState.codeVerifier }
+          : {};
+      },
       normalizeTokenData: (data) => data?.data || data,
       getErrorFromData: (data) => {
         if (!data) {
