@@ -36,12 +36,8 @@ const env = {
   threadsRedirectUri: cleanEnvValue(process.env.THREADS_REDIRECT_URI),
   threadsScopes:
     process.env.THREADS_SCOPES || 'threads_basic,threads_content_publish',
-  tiktokClientKey:
-    cleanEnvValue(process.env.TIKTOK_CLIENT_KEY) ||
-    cleanEnvValue(process.env.TIKTOK_APP_ID) ||
-    cleanEnvValue(process.env.TIKTOK_CLIENT_ID),
-  tiktokClientSecret:
-    cleanEnvValue(process.env.TIKTOK_CLIENT_SECRET) || cleanEnvValue(process.env.TIKTOK_APP_SECRET),
+  tiktokClientKey: cleanEnvValue(process.env.TIKTOK_CLIENT_KEY),
+  tiktokClientSecret: cleanEnvValue(process.env.TIKTOK_CLIENT_SECRET),
   tiktokRedirectUri: cleanEnvValue(process.env.TIKTOK_REDIRECT_URI),
   tiktokScopes:
     process.env.TIKTOK_SCOPES || 'user.info.basic,video.upload,video.publish',
