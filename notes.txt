@@ -1,0 +1,23 @@
+
+facebook
+    needs app approval for usage to unknown accounts
+    
+instagram
+    needs app approval for usage to unknown accounts
+    
+threads
+    needs app approval for usage to unknown accounts
+
+
+
+tiktok
+    video file computation 
+    needs app approval before usage
+    only available for logging instagram
+
+
+x
+    api have pricing 
+
+
+linkedin 

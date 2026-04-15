@@ -63,7 +63,7 @@ const env = {
   linkedinRedirectUri: cleanEnvValue(process.env.LINKEDIN_REDIRECT_URI),
   linkedinScopes: normalizeSpaceDelimitedScopes(
     process.env.LINKEDIN_SCOPES,
-    'openid profile email w_member_social r_profile_basicinfo'
+    'openid profile email w_member_social r_profile_basicinfo r_verify'
   ),
   tiktokClientKey: cleanEnvValue(process.env.TIKTOK_CLIENT_KEY),
   tiktokClientSecret: cleanEnvValue(process.env.TIKTOK_CLIENT_SECRET),
