@@ -16,7 +16,7 @@ const getEffectiveXRedirectUri = createRedirectUriResolver(
 
 const xAuth = (req, res) => {
   if (!xClientId) {
-    return res.status(500).json({ message: 'X_CLIENT_ID is not configured' });
+    return res.status(500).json({ message: 'X client ID is not configured. Set X_CLIENT_ID (or X_OAUTH_2_0_CLIENT_ID).' });
   }
 
   const redirectUri = getEffectiveXRedirectUri(req);
