@@ -22,6 +22,15 @@ const getFirstDefinedEnvValue = (...keys) => {
   return undefined;
 };
 
+const normalizeSpaceDelimitedScopes = (value, fallback) => {
+  const raw = cleanEnvValue(value) || fallback;
+  return String(raw)
+    .split(/[\s,]+/)
+    .map((scope) => scope.trim())
+    .filter(Boolean)
+    .join(' ');
+};
+
 const env = {
   port: Number(process.env.PORT || 5000),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -52,8 +61,10 @@ const env = {
   linkedinClientId: cleanEnvValue(process.env.LINKEDIN_CLIENT_ID),
   linkedinClientSecret: cleanEnvValue(process.env.LINKEDIN_CLIENT_SECRET),
   linkedinRedirectUri: cleanEnvValue(process.env.LINKEDIN_REDIRECT_URI),
-  linkedinScopes:
-    process.env.LINKEDIN_SCOPES || 'openid profile email w_member_social',
+  linkedinScopes: normalizeSpaceDelimitedScopes(
+    process.env.LINKEDIN_SCOPES,
+    'openid profile email w_member_social r_profile_basicinfo'
+  ),
   tiktokClientKey: cleanEnvValue(process.env.TIKTOK_CLIENT_KEY),
   tiktokClientSecret: cleanEnvValue(process.env.TIKTOK_CLIENT_SECRET),
   tiktokRedirectUri: cleanEnvValue(process.env.TIKTOK_REDIRECT_URI),
