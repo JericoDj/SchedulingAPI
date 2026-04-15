@@ -9,6 +9,16 @@ const cleanEnvValue = (value) => {
   return value.trim().replace(/^['"]|['"]$/g, '');
 };
 
+const getFirstDefinedEnvValue = (...keys) => {
+  for (const key of keys) {
+    const value = cleanEnvValue(process.env[key]);
+    if (value) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
 const env = {
   port: Number(process.env.PORT || 5000),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -47,8 +57,16 @@ const env = {
   tiktokScopes:
     process.env.TIKTOK_SCOPES ||
     'user.info.basic,user.info.profile,user.info.stats,video.list,video.upload,video.publish',
-  xClientId: cleanEnvValue(process.env.X_CLIENT_ID),
-  xClientSecret: cleanEnvValue(process.env.X_CLIENT_SECRET),
+  xClientId: getFirstDefinedEnvValue(
+    'X_CLIENT_ID',
+    'X_OAUTH_2_0_CLIENT_ID',
+    'X_OAUTH_2.0_CLIENT_ID'
+  ),
+  xClientSecret: getFirstDefinedEnvValue(
+    'X_CLIENT_SECRET',
+    'X_OAUTH_2_0_CLIENT_SECRET',
+    'X_OAUTH_2.0_CLIENT_SECRET'
+  ),
   xRedirectUri: cleanEnvValue(process.env.X_REDIRECT_URI),
   xScopes:
     process.env.X_SCOPES || 'tweet.read tweet.write users.read offline.access',
