@@ -31,6 +31,15 @@ const normalizeSpaceDelimitedScopes = (value, fallback) => {
     .join(' ');
 };
 
+const normalizeCommaDelimitedScopes = (value, fallback) => {
+  const raw = cleanEnvValue(value) || fallback;
+  return String(raw)
+    .split(/[\s,]+/)
+    .map((scope) => scope.trim())
+    .filter(Boolean)
+    .join(',');
+};
+
 const env = {
   port: Number(process.env.PORT || 5000),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -84,18 +93,26 @@ const env = {
   xRedirectUri: cleanEnvValue(process.env.X_REDIRECT_URI),
   xScopes:
     process.env.X_SCOPES || 'tweet.read tweet.write users.read offline.access',
-  youtubeClientId: cleanEnvValue(process.env.YOUTUBE_CLIENT_ID),
-  youtubeClientSecret: cleanEnvValue(process.env.YOUTUBE_CLIENT_SECRET),
+  youtubeClientId: getFirstDefinedEnvValue(
+    'YOUTUBE_CLIENT_ID',
+    'GOOGLE_YOUTUBE_OAUTH_SOCIALSYNC_CLIENT_ID'
+  ),
+  youtubeClientSecret: getFirstDefinedEnvValue(
+    'YOUTUBE_CLIENT_SECRET',
+    'GOOGLE_YOUTUBE_OAUTH_SOCIALSYNC_CLIENT_SECRET'
+  ),
   youtubeRedirectUri: cleanEnvValue(process.env.YOUTUBE_REDIRECT_URI),
-  youtubeScopes:
-    process.env.YOUTUBE_SCOPES ||
-    'openid profile email https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload',
+  youtubeScopes: normalizeSpaceDelimitedScopes(
+    process.env.YOUTUBE_SCOPES,
+    'openid profile email https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload'
+  ),
   pinterestClientId: cleanEnvValue(process.env.PINTEREST_CLIENT_ID),
   pinterestClientSecret: cleanEnvValue(process.env.PINTEREST_CLIENT_SECRET),
   pinterestRedirectUri: cleanEnvValue(process.env.PINTEREST_REDIRECT_URI),
-  pinterestScopes:
-    process.env.PINTEREST_SCOPES ||
-    'user_accounts:read,boards:read,pins:read,pins:write',
+  pinterestScopes: normalizeCommaDelimitedScopes(
+    process.env.PINTEREST_SCOPES,
+    'user_accounts:read,boards:read,pins:read,pins:write'
+  ),
 };
 
 const validateEnv = () => {
