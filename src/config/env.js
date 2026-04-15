@@ -36,12 +36,34 @@ const env = {
   threadsRedirectUri: cleanEnvValue(process.env.THREADS_REDIRECT_URI),
   threadsScopes:
     process.env.THREADS_SCOPES || 'threads_basic,threads_content_publish',
+  linkedinClientId: cleanEnvValue(process.env.LINKEDIN_CLIENT_ID),
+  linkedinClientSecret: cleanEnvValue(process.env.LINKEDIN_CLIENT_SECRET),
+  linkedinRedirectUri: cleanEnvValue(process.env.LINKEDIN_REDIRECT_URI),
+  linkedinScopes:
+    process.env.LINKEDIN_SCOPES || 'openid profile email w_member_social',
   tiktokClientKey: cleanEnvValue(process.env.TIKTOK_CLIENT_KEY),
   tiktokClientSecret: cleanEnvValue(process.env.TIKTOK_CLIENT_SECRET),
   tiktokRedirectUri: cleanEnvValue(process.env.TIKTOK_REDIRECT_URI),
   tiktokScopes:
     process.env.TIKTOK_SCOPES ||
     'user.info.basic,user.info.profile,user.info.stats,video.list,video.upload,video.publish',
+  xClientId: cleanEnvValue(process.env.X_CLIENT_ID),
+  xClientSecret: cleanEnvValue(process.env.X_CLIENT_SECRET),
+  xRedirectUri: cleanEnvValue(process.env.X_REDIRECT_URI),
+  xScopes:
+    process.env.X_SCOPES || 'tweet.read tweet.write users.read offline.access',
+  youtubeClientId: cleanEnvValue(process.env.YOUTUBE_CLIENT_ID),
+  youtubeClientSecret: cleanEnvValue(process.env.YOUTUBE_CLIENT_SECRET),
+  youtubeRedirectUri: cleanEnvValue(process.env.YOUTUBE_REDIRECT_URI),
+  youtubeScopes:
+    process.env.YOUTUBE_SCOPES ||
+    'openid profile email https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload',
+  pinterestClientId: cleanEnvValue(process.env.PINTEREST_CLIENT_ID),
+  pinterestClientSecret: cleanEnvValue(process.env.PINTEREST_CLIENT_SECRET),
+  pinterestRedirectUri: cleanEnvValue(process.env.PINTEREST_REDIRECT_URI),
+  pinterestScopes:
+    process.env.PINTEREST_SCOPES ||
+    'user_accounts:read,boards:read,pins:read,pins:write',
 };
 
 const validateEnv = () => {
