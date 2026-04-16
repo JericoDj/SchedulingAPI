@@ -5,7 +5,7 @@ const morgan = require('morgan');
 
 const { deployment, nodeEnv } = require('./config/env');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
-const { userRouter } = require('./routes/userRoutes');
+const { authRouter, userRouter } = require('./routes/userRoutes');
 const instagramRoutes = require('./routes/instagramRoutes');
 const facebookRoutes = require('./routes/facebookRoutes');
 const tiktokRoutes = require('./routes/tiktokRoutes');
@@ -14,6 +14,8 @@ const threadsRoutes = require('./routes/threadsRoutes');
 const xRoutes = require('./routes/xRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
 const pinterestRoutes = require('./routes/pinterestRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes');
+const cronRoutes = require('./routes/cronRoutes');
 const oauthRoutes = require('./routes/oauthRoutes');
 
 const app = express();
@@ -46,6 +48,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 app.use('/api/instagram-posts', instagramRoutes);
 app.use('/api/facebook-posts', facebookRoutes);
@@ -55,6 +58,8 @@ app.use('/api/threads-posts', threadsRoutes);
 app.use('/api/x-posts', xRoutes);
 app.use('/api/youtube-posts', youtubeRoutes);
 app.use('/api/pinterest-posts', pinterestRoutes);
+app.use('/api/schedule', scheduleRoutes);
+app.use('/api/cron', cronRoutes);
 app.use('/api/oauth', oauthRoutes);
 
 app.use(notFound);

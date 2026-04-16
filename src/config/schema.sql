@@ -147,6 +147,19 @@ CREATE TABLE IF NOT EXISTS pinterest_posts (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS scheduled_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  platform VARCHAR(30) NOT NULL,
+  content JSONB NOT NULL DEFAULT '{}'::jsonb,
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'pending',
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  error_message TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_instagram_posts_user_id
   ON instagram_posts (user_id);
 
@@ -171,6 +184,9 @@ CREATE INDEX IF NOT EXISTS idx_youtube_posts_user_id
 CREATE INDEX IF NOT EXISTS idx_pinterest_posts_user_id
   ON pinterest_posts (user_id);
 
+CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_id
+  ON scheduled_posts (user_id);
+
 CREATE INDEX IF NOT EXISTS idx_instagram_posts_schedule_status
   ON instagram_posts (status, scheduled_at);
 
@@ -194,6 +210,9 @@ CREATE INDEX IF NOT EXISTS idx_youtube_posts_schedule_status
 
 CREATE INDEX IF NOT EXISTS idx_pinterest_posts_schedule_status
   ON pinterest_posts (status, scheduled_at);
+
+CREATE INDEX IF NOT EXISTS idx_scheduled_posts_status_scheduled_at
+  ON scheduled_posts (status, scheduled_at);
 
 DROP TRIGGER IF EXISTS set_users_updated_at ON users;
 CREATE TRIGGER set_users_updated_at
@@ -246,5 +265,11 @@ EXECUTE FUNCTION set_updated_at();
 DROP TRIGGER IF EXISTS set_pinterest_posts_updated_at ON pinterest_posts;
 CREATE TRIGGER set_pinterest_posts_updated_at
 BEFORE UPDATE ON pinterest_posts
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS set_scheduled_posts_updated_at ON scheduled_posts;
+CREATE TRIGGER set_scheduled_posts_updated_at
+BEFORE UPDATE ON scheduled_posts
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
