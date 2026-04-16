@@ -2,7 +2,7 @@ const express = require('express');
 
 const { protect } = require('../middleware/authMiddleware');
 
-const createPostRoutes = (controller) => {
+const personalRoutes = (controller) => {
   const router = express.Router();
 
   router.route('/').get(protect, controller.getPosts).post(protect, controller.createPost);
@@ -18,4 +18,4 @@ const createPostRoutes = (controller) => {
   return router;
 };
 
-module.exports = createPostRoutes;
+module.exports = personalRoutes;

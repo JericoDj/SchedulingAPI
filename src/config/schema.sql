@@ -83,6 +83,70 @@ CREATE TABLE IF NOT EXISTS linkedin_posts (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS threads_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255),
+  caption TEXT NOT NULL,
+  media_url TEXT,
+  platform_account_id VARCHAR(255),
+  status VARCHAR(30) NOT NULL DEFAULT 'draft',
+  scheduled_at TIMESTAMPTZ,
+  published_at TIMESTAMPTZ,
+  ai_prompt TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS x_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255),
+  caption TEXT NOT NULL,
+  media_url TEXT,
+  platform_account_id VARCHAR(255),
+  status VARCHAR(30) NOT NULL DEFAULT 'draft',
+  scheduled_at TIMESTAMPTZ,
+  published_at TIMESTAMPTZ,
+  ai_prompt TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS youtube_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255),
+  caption TEXT NOT NULL,
+  media_url TEXT,
+  platform_account_id VARCHAR(255),
+  status VARCHAR(30) NOT NULL DEFAULT 'draft',
+  scheduled_at TIMESTAMPTZ,
+  published_at TIMESTAMPTZ,
+  ai_prompt TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS pinterest_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255),
+  caption TEXT NOT NULL,
+  media_url TEXT,
+  platform_account_id VARCHAR(255),
+  status VARCHAR(30) NOT NULL DEFAULT 'draft',
+  scheduled_at TIMESTAMPTZ,
+  published_at TIMESTAMPTZ,
+  ai_prompt TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_instagram_posts_user_id
   ON instagram_posts (user_id);
 
@@ -95,6 +159,18 @@ CREATE INDEX IF NOT EXISTS idx_tiktok_posts_user_id
 CREATE INDEX IF NOT EXISTS idx_linkedin_posts_user_id
   ON linkedin_posts (user_id);
 
+CREATE INDEX IF NOT EXISTS idx_threads_posts_user_id
+  ON threads_posts (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_x_posts_user_id
+  ON x_posts (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_youtube_posts_user_id
+  ON youtube_posts (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_pinterest_posts_user_id
+  ON pinterest_posts (user_id);
+
 CREATE INDEX IF NOT EXISTS idx_instagram_posts_schedule_status
   ON instagram_posts (status, scheduled_at);
 
@@ -106,6 +182,18 @@ CREATE INDEX IF NOT EXISTS idx_tiktok_posts_schedule_status
 
 CREATE INDEX IF NOT EXISTS idx_linkedin_posts_schedule_status
   ON linkedin_posts (status, scheduled_at);
+
+CREATE INDEX IF NOT EXISTS idx_threads_posts_schedule_status
+  ON threads_posts (status, scheduled_at);
+
+CREATE INDEX IF NOT EXISTS idx_x_posts_schedule_status
+  ON x_posts (status, scheduled_at);
+
+CREATE INDEX IF NOT EXISTS idx_youtube_posts_schedule_status
+  ON youtube_posts (status, scheduled_at);
+
+CREATE INDEX IF NOT EXISTS idx_pinterest_posts_schedule_status
+  ON pinterest_posts (status, scheduled_at);
 
 DROP TRIGGER IF EXISTS set_users_updated_at ON users;
 CREATE TRIGGER set_users_updated_at
@@ -134,5 +222,29 @@ EXECUTE FUNCTION set_updated_at();
 DROP TRIGGER IF EXISTS set_linkedin_posts_updated_at ON linkedin_posts;
 CREATE TRIGGER set_linkedin_posts_updated_at
 BEFORE UPDATE ON linkedin_posts
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS set_threads_posts_updated_at ON threads_posts;
+CREATE TRIGGER set_threads_posts_updated_at
+BEFORE UPDATE ON threads_posts
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS set_x_posts_updated_at ON x_posts;
+CREATE TRIGGER set_x_posts_updated_at
+BEFORE UPDATE ON x_posts
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS set_youtube_posts_updated_at ON youtube_posts;
+CREATE TRIGGER set_youtube_posts_updated_at
+BEFORE UPDATE ON youtube_posts
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS set_pinterest_posts_updated_at ON pinterest_posts;
+CREATE TRIGGER set_pinterest_posts_updated_at
+BEFORE UPDATE ON pinterest_posts
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();

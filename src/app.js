@@ -5,12 +5,15 @@ const morgan = require('morgan');
 
 const { deployment, nodeEnv } = require('./config/env');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
+const { userRouter } = require('./routes/userRoutes');
 const instagramRoutes = require('./routes/instagramRoutes');
 const facebookRoutes = require('./routes/facebookRoutes');
 const tiktokRoutes = require('./routes/tiktokRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
+const threadsRoutes = require('./routes/threadsRoutes');
+const xRoutes = require('./routes/xRoutes');
+const youtubeRoutes = require('./routes/youtubeRoutes');
+const pinterestRoutes = require('./routes/pinterestRoutes');
 const oauthRoutes = require('./routes/oauthRoutes');
 
 const app = express();
@@ -43,12 +46,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/users', userRouter);
 app.use('/api/instagram-posts', instagramRoutes);
 app.use('/api/facebook-posts', facebookRoutes);
 app.use('/api/tiktok-posts', tiktokRoutes);
 app.use('/api/linkedin-posts', linkedinRoutes);
+app.use('/api/threads-posts', threadsRoutes);
+app.use('/api/x-posts', xRoutes);
+app.use('/api/youtube-posts', youtubeRoutes);
+app.use('/api/pinterest-posts', pinterestRoutes);
 app.use('/api/oauth', oauthRoutes);
 
 app.use(notFound);

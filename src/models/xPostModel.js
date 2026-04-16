@@ -1,0 +1,3 @@
+const BasePostModel = require('./BasePostModel');
+
+module.exports = new BasePostModel('x_posts', 'x');

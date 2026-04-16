@@ -2,6 +2,12 @@ const express = require('express');
 
 const { protect } = require('../middleware/authMiddleware');
 const {
+  getCurrentUser,
+  login,
+  register,
+  verifyFacebookLogin,
+} = require('../controllers/authController');
+const {
   createUser,
   deleteUser,
   getUserById,
@@ -9,9 +15,21 @@ const {
   updateUser,
 } = require('../controllers/userController');
 
-const router = express.Router();
+const userRouter = express.Router();
+const authRouter = express.Router();
 
-router.route('/').get(protect, getUsers).post(createUser);
-router.route('/:id').get(protect, getUserById).put(protect, updateUser).delete(protect, deleteUser);
+authRouter.post('/register', register);
+authRouter.post('/login', login);
+authRouter.post('/facebook/verify', verifyFacebookLogin);
+authRouter.get('/me', protect, getCurrentUser);
 
-module.exports = router;
+userRouter.get('/', protect, getUsers);
+userRouter.post('/', createUser);
+userRouter.get('/:id', protect, getUserById);
+userRouter.put('/:id', protect, updateUser);
+userRouter.delete('/:id', protect, deleteUser);
+
+module.exports = {
+  userRouter,
+  authRouter,
+};

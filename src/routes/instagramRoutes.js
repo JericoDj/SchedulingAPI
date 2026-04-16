@@ -1,4 +1,17 @@
-const createPostRoutes = require('./createPostRoutes');
+const express = require('express');
+
+const { protect } = require('../middleware/authMiddleware');
 const instagramController = require('../controllers/instagramController');
 
-module.exports = createPostRoutes(instagramController);
+const router = express.Router();
+
+router.get('/', protect, instagramController.getPosts);
+router.post('/', protect, instagramController.createPost);
+router.get('/scheduled', protect, instagramController.getScheduledPosts);
+router.post('/:id/schedule', protect, instagramController.schedulePost);
+router.post('/:id/publish', protect, instagramController.publishPost);
+router.get('/:id', protect, instagramController.getPostById);
+router.put('/:id', protect, instagramController.updatePost);
+router.delete('/:id', protect, instagramController.deletePost);
+
+module.exports = router;
