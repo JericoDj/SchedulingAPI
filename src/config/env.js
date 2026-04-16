@@ -106,8 +106,16 @@ const env = {
     process.env.YOUTUBE_SCOPES,
     'openid profile email https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload'
   ),
-  pinterestClientId: cleanEnvValue(process.env.PINTEREST_CLIENT_ID),
-  pinterestClientSecret: cleanEnvValue(process.env.PINTEREST_CLIENT_SECRET),
+  pinterestClientId: getFirstDefinedEnvValue(
+    'PINTEREST_CLIENT_ID',
+    'PINTEREST_APP_ID',
+    'PINTERST_APP_ID'
+  ),
+  pinterestClientSecret: getFirstDefinedEnvValue(
+    'PINTEREST_CLIENT_SECRET',
+    'PINTEREST_APP_SECRET'
+  ),
+  pinterestAccessToken: cleanEnvValue(process.env.PINTEREST_ACCESS_TOKEN),
   pinterestRedirectUri: cleanEnvValue(process.env.PINTEREST_REDIRECT_URI),
   pinterestScopes: normalizeCommaDelimitedScopes(
     process.env.PINTEREST_SCOPES,
