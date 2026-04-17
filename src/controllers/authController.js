@@ -74,6 +74,28 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   res.status(200).json(req.user);
 });
 
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    res.status(400);
+    throw new Error('Email is required');
+  }
+
+  const user = await userModel.findByEmail(email);
+
+  // Do not expose whether the email exists.
+  if (user) {
+    console.log(`[auth] forgot password requested for user=${user.id}`);
+  } else {
+    console.log('[auth] forgot password requested for unknown email');
+  }
+
+  res.status(200).json({
+    message: 'If an account exists for this email, password reset instructions have been sent.',
+  });
+});
+
 const verifyFacebookLogin = asyncHandler(async (req, res) => {
   const { accessToken, userID } = req.body;
 
@@ -126,4 +148,5 @@ module.exports = {
   login,
   verifyFacebookLogin,
   getCurrentUser,
+  forgotPassword,
 };

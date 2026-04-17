@@ -3,6 +3,7 @@ const express = require('express');
 const { protect } = require('../middleware/authMiddleware');
 const {
   getCurrentUser,
+  forgotPassword,
   login,
   register,
   verifyFacebookLogin,
@@ -20,6 +21,7 @@ const authRouter = express.Router();
 
 authRouter.post('/register', register);
 authRouter.post('/login', login);
+authRouter.post('/forgot-password', forgotPassword);
 authRouter.post('/facebook/verify', verifyFacebookLogin);
 authRouter.get('/me', protect, getCurrentUser);
 

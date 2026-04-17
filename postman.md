@@ -28,6 +28,7 @@ pinterestPostId=
 
 - `POST {{baseUrl}}/api/auth/register`
 - `POST {{baseUrl}}/api/auth/login`
+- `POST {{baseUrl}}/api/auth/forgot-password`
 - `GET {{baseUrl}}/api/auth/me`
 
 Save token from login/register in `{{token}}`.
