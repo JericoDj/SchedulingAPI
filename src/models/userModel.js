@@ -6,9 +6,31 @@ const publicUserFields = `
   email,
   avatar_url,
   role,
+  facebook_page_id,
+  facebook_page_name,
+  facebook_token_updated_at,
   created_at,
   updated_at
 `;
+
+let socialColumnsEnsured = false;
+
+const ensureSocialColumns = async () => {
+  if (socialColumnsEnsured) {
+    return;
+  }
+
+  await query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS facebook_user_access_token TEXT,
+    ADD COLUMN IF NOT EXISTS facebook_page_id VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS facebook_page_name VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS facebook_page_access_token TEXT,
+    ADD COLUMN IF NOT EXISTS facebook_token_updated_at TIMESTAMPTZ
+  `);
+
+  socialColumnsEnsured = true;
+};
 
 const buildUpdateStatement = (fieldMap, startingIndex = 1) => {
   const values = [];
@@ -31,6 +53,8 @@ const buildUpdateStatement = (fieldMap, startingIndex = 1) => {
 
 const userModel = {
   async create({ name, email, passwordHash, avatar_url = null, role = 'user' }) {
+    await ensureSocialColumns();
+
     const sql = `
       INSERT INTO users (name, email, password_hash, avatar_url, role)
       VALUES ($1, $2, $3, $4, $5)
@@ -42,6 +66,8 @@ const userModel = {
   },
 
   async findAll() {
+    await ensureSocialColumns();
+
     const sql = `
       SELECT ${publicUserFields}
       FROM users
@@ -53,6 +79,8 @@ const userModel = {
   },
 
   async findById(id) {
+    await ensureSocialColumns();
+
     const sql = `
       SELECT ${publicUserFields}
       FROM users
@@ -65,6 +93,8 @@ const userModel = {
   },
 
   async findByEmail(email) {
+    await ensureSocialColumns();
+
     const sql = `
       SELECT ${publicUserFields}
       FROM users
@@ -77,6 +107,8 @@ const userModel = {
   },
 
   async findByEmailWithPassword(email) {
+    await ensureSocialColumns();
+
     const sql = `
       SELECT
         id,
@@ -84,6 +116,9 @@ const userModel = {
         email,
         avatar_url,
         role,
+        facebook_page_id,
+        facebook_page_name,
+        facebook_token_updated_at,
         password_hash,
         created_at,
         updated_at
@@ -97,6 +132,8 @@ const userModel = {
   },
 
   async update(id, updates) {
+    await ensureSocialColumns();
+
     const fieldMap = {
       name: updates.name,
       email: updates.email,
@@ -123,6 +160,8 @@ const userModel = {
   },
 
   async delete(id) {
+    await ensureSocialColumns();
+
     const sql = `
       DELETE FROM users
       WHERE id = $1
@@ -130,6 +169,54 @@ const userModel = {
     `;
 
     const { rows } = await query(sql, [id]);
+    return rows[0] || null;
+  },
+
+  async saveFacebookConnection(
+    userId,
+    { userAccessToken, pageId, pageName, pageAccessToken }
+  ) {
+    await ensureSocialColumns();
+
+    const sql = `
+      UPDATE users
+      SET facebook_user_access_token = $2,
+          facebook_page_id = $3,
+          facebook_page_name = $4,
+          facebook_page_access_token = $5,
+          facebook_token_updated_at = NOW()
+      WHERE id = $1
+      RETURNING ${publicUserFields}
+    `;
+
+    const { rows } = await query(sql, [
+      userId,
+      userAccessToken,
+      pageId,
+      pageName,
+      pageAccessToken,
+    ]);
+
+    return rows[0] || null;
+  },
+
+  async getFacebookConnection(userId) {
+    await ensureSocialColumns();
+
+    const sql = `
+      SELECT
+        id,
+        facebook_user_access_token,
+        facebook_page_id,
+        facebook_page_name,
+        facebook_page_access_token,
+        facebook_token_updated_at
+      FROM users
+      WHERE id = $1
+      LIMIT 1
+    `;
+
+    const { rows } = await query(sql, [userId]);
     return rows[0] || null;
   },
 };

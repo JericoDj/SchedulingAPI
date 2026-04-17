@@ -16,8 +16,8 @@ const xRoutes = require('./routes/xRoutes');
 const youtubeRoutes = require('./routes/youtubeRoutes');
 const pinterestRoutes = require('./routes/pinterestRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
-const cronRoutes = require('./routes/cronRoutes');
 const oauthRoutes = require('./routes/oauthRoutes');
+const workerRoutes = require('./routes/workerRoutes');
 
 const app = express();
 
@@ -30,6 +30,8 @@ const allowedOrigins = [
   ...configuredOrigins,
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'http://localhost:4000',
+  'http://127.0.0.1:4000',
   'http://localhost:5000',
   'http://127.0.0.1:5000',
   'https://socialsyncfe.netlify.app',
@@ -79,8 +81,8 @@ app.use('/api/x-posts', xRoutes);
 app.use('/api/youtube-posts', youtubeRoutes);
 app.use('/api/pinterest-posts', pinterestRoutes);
 app.use('/api/schedule', scheduleRoutes);
-app.use('/api/cron', cronRoutes);
 app.use('/api/oauth', oauthRoutes);
+app.use('/api/worker', workerRoutes);
 
 
 

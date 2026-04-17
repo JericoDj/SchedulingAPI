@@ -3,6 +3,7 @@ const express = require('express');
 const { protect } = require('../middleware/authMiddleware');
 const {
   createUser,
+  connectFacebookPage,
   deleteUser,
   getUserById,
   getUsers,
@@ -13,6 +14,7 @@ const {
 const router = express.Router();
 
 router.get('/', protect, getUsers);
+router.post('/me/facebook-connection', protect, connectFacebookPage);
 router.post('/', createUser);
 router.get('/:id', protect, getUserById);
 router.put('/:id', protect, updateUser);

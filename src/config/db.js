@@ -4,6 +4,7 @@ const ws = require('ws');
 const { databaseUrl } = require('./env');
 
 neonConfig.webSocketConstructor = ws;
+neonConfig.poolQueryViaFetch = true;
 
 const pool = new Pool({
   connectionString: databaseUrl,

@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 
 const userModel = require('../models/userModel');
 const asyncHandler = require('../utils/asyncHandler');
+const { graphApiVersion } = require('../config/env');
 
 const canManageUser = (requestUser, targetUserId) => {
   return requestUser.role === 'admin' || requestUser.id === targetUserId;
@@ -123,10 +124,74 @@ const deleteUser = asyncHandler(async (req, res) => {
   });
 });
 
+const connectFacebookPage = asyncHandler(async (req, res) => {
+  const accessToken = String(req.body.access_token || '').trim();
+  const requestedPageId = String(req.body.page_id || '').trim() || null;
+
+  if (!accessToken) {
+    res.status(400);
+    throw new Error('access_token is required');
+  }
+
+  const accountsUrl = `https://graph.facebook.com/${graphApiVersion}/me/accounts?fields=id,name,access_token&access_token=${encodeURIComponent(
+    accessToken
+  )}`;
+  const accountsResponse = await fetch(accountsUrl);
+  const accountsData = await accountsResponse.json();
+
+  if (!accountsResponse.ok) {
+    res.status(accountsResponse.status || 400);
+    throw new Error(
+      accountsData?.error?.message || 'Failed to fetch Facebook pages for this account'
+    );
+  }
+
+  const pages = Array.isArray(accountsData?.data) ? accountsData.data : [];
+
+  if (pages.length === 0) {
+    res.status(400);
+    throw new Error('No Facebook pages found for this account');
+  }
+
+  const selectedPage =
+    pages.find((page) => String(page.id) === requestedPageId) || pages[0];
+
+  if (!selectedPage?.id || !selectedPage?.access_token) {
+    res.status(400);
+    throw new Error('Selected Facebook page does not include required publish permissions');
+  }
+
+  const updatedUser = await userModel.saveFacebookConnection(req.user.id, {
+    userAccessToken: accessToken,
+    pageId: String(selectedPage.id),
+    pageName: selectedPage.name || null,
+    pageAccessToken: selectedPage.access_token,
+  });
+
+  if (!updatedUser) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  res.status(200).json({
+    message: 'Facebook page connected for scheduler worker',
+    selected_page: {
+      id: String(selectedPage.id),
+      name: selectedPage.name || null,
+    },
+    pages: pages.map((page) => ({
+      id: String(page.id),
+      name: page.name || null,
+    })),
+    user: updatedUser,
+  });
+});
+
 module.exports = {
   createUser,
   getUsers,
   getUserById,
   updateUser,
   deleteUser,
+  connectFacebookPage,
 };

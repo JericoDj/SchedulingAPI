@@ -1,4 +1,4 @@
-const { pool, query } = require('../config/db');
+const { query } = require('../config/db');
 
 class ScheduledPostModel {
   async create({ user_id, platform, content, scheduled_at }) {
@@ -31,47 +31,26 @@ class ScheduledPostModel {
   }
 
   async claimDuePending(limit = 10) {
-    const client = await pool.connect();
-
-    try {
-      await client.query('BEGIN');
-
-      const selectSql = `
+    const sql = `
+      WITH due_ids AS (
         SELECT id
         FROM scheduled_posts
         WHERE status = 'pending'
           AND scheduled_at <= NOW()
         ORDER BY scheduled_at ASC, created_at ASC
-        FOR UPDATE SKIP LOCKED
         LIMIT $1
-      `;
+        FOR UPDATE SKIP LOCKED
+      )
+      UPDATE scheduled_posts
+      SET status = 'processing',
+          error_message = NULL,
+          updated_at = NOW()
+      WHERE id IN (SELECT id FROM due_ids)
+      RETURNING *
+    `;
 
-      const selected = await client.query(selectSql, [limit]);
-      const ids = selected.rows.map((row) => row.id);
-
-      if (ids.length === 0) {
-        await client.query('COMMIT');
-        return [];
-      }
-
-      const updateSql = `
-        UPDATE scheduled_posts
-        SET status = 'processing',
-            error_message = NULL,
-            updated_at = NOW()
-        WHERE id = ANY($1::uuid[])
-        RETURNING *
-      `;
-
-      const updated = await client.query(updateSql, [ids]);
-      await client.query('COMMIT');
-      return updated.rows;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    const { rows } = await query(sql, [limit]);
+    return rows;
   }
 
   async markPosted(id) {

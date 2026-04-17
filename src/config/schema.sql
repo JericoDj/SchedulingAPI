@@ -15,6 +15,11 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   avatar_url TEXT,
   role VARCHAR(30) NOT NULL DEFAULT 'user',
+  facebook_user_access_token TEXT,
+  facebook_page_id VARCHAR(255),
+  facebook_page_name VARCHAR(255),
+  facebook_page_access_token TEXT,
+  facebook_token_updated_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

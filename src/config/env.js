@@ -121,6 +121,7 @@ const env = {
     process.env.PINTEREST_SCOPES,
     'user_accounts:read,boards:read,pins:read,pins:write'
   ),
+  workerSharedSecret: cleanEnvValue(process.env.WORKER_SHARED_SECRET),
 };
 
 const validateEnv = () => {
