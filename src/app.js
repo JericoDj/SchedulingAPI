@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 
-const { deployment, nodeEnv } = require('./config/env');
+const { clientUrl, deployment, nodeEnv } = require('./config/env');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const { authRouter, userRouter } = require('./routes/userRoutes');
 const instagramRoutes = require('./routes/instagramRoutes');
@@ -20,9 +20,18 @@ const oauthRoutes = require('./routes/oauthRoutes');
 
 const app = express();
 
+const configuredOrigins = String(clientUrl || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
+  ...configuredOrigins,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5000',
+  'http://127.0.0.1:5000',
   'https://socialsyncfe.netlify.app',
-  'http://localhost:5173', // if using local dev
 ];
 
 const corsOptions = {
@@ -30,7 +39,7 @@ const corsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('CORS not allowed'));
+      callback(new Error(`CORS not allowed for origin: ${origin}`));
     }
   },
   credentials: true,
