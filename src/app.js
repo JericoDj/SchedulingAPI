@@ -20,11 +20,21 @@ const oauthRoutes = require('./routes/oauthRoutes');
 
 const app = express();
 
+const allowedOrigins = [
+  'https://socialsyncfe.netlify.app',
+  'http://localhost:5173', // if using local dev
+];
+
 const corsOptions = {
-  origin: true,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
   credentials: true,
 };
-
 
 
 

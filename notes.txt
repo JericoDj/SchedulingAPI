@@ -8,8 +8,6 @@ instagram
 threads
     needs app approval for usage to unknown accounts
 
-
-
 tiktok
     video file computation 
     needs app approval before usage
@@ -19,5 +17,17 @@ tiktok
 x
     api have pricing 
 
+    pricing
+        1. Pay-per-use (NEW default)
 
-linkedin 
+        X has moved away from fixed plans. Now you mainly:
+
+        Buy credits → pay per request
+
+    Typical costs:
+        Post (tweet): ~$0.01 each
+        Read tweet: ~$0.005 each
+        User lookup: ~$0.01 eac
+
+linkedin
+    
