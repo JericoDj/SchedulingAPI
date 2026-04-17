@@ -5,7 +5,8 @@ const morgan = require('morgan');
 
 const { clientUrl, deployment, nodeEnv } = require('./config/env');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
-const { authRouter, userRouter } = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const instagramRoutes = require('./routes/instagramRoutes');
 const facebookRoutes = require('./routes/facebookRoutes');
 const tiktokRoutes = require('./routes/tiktokRoutes');
@@ -67,8 +68,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.use('/api/auth', authRouter);
-app.use('/api/users', userRouter);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/instagram-posts', instagramRoutes);
 app.use('/api/facebook-posts', facebookRoutes);
 app.use('/api/tiktok-posts', tiktokRoutes);
