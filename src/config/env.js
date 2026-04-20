@@ -122,6 +122,17 @@ const env = {
     'user_accounts:read,boards:read,pins:read,pins:write'
   ),
   workerSharedSecret: cleanEnvValue(process.env.WORKER_SHARED_SECRET),
+  // Firebase Config
+  firebaseProjectId: cleanEnvValue(process.env.FIREBASE_PROJECT_ID),
+  firebaseClientEmail: cleanEnvValue(process.env.FIREBASE_CLIENT_EMAIL),
+  // Read raw - cleanEnvValue would strip quotes that are needed to preserve \n in PEM key
+  firebasePrivateKey: process.env.FIREBASE_PRIVATE_KEY || null,
+  firebaseStorageBucket: cleanEnvValue(process.env.FIREBASE_STORAGE_BUCKET),
+  firebaseApiKey: cleanEnvValue(process.env.FIREBASE_API_KEY),
+  firebaseAuthDomain: cleanEnvValue(process.env.FIREBASE_AUTH_DOMAIN),
+  firebaseMessagingSenderId: cleanEnvValue(process.env.FIREBASE_MESSAGING_SENDER_ID),
+  firebaseAppId: cleanEnvValue(process.env.FIREBASE_APP_ID),
+  firebaseMeasurementId: cleanEnvValue(process.env.FIREBASE_MEASUREMENT_ID),
 };
 
 const validateEnv = () => {

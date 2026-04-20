@@ -81,6 +81,33 @@ class ScheduledPostModel {
     const { rows } = await query(sql, [id, errorMessage]);
     return rows[0] || null;
   }
+  async updatePost(id, userId, updates) {
+    const { content, scheduled_at } = updates;
+    const sql = `
+      UPDATE scheduled_posts
+      SET content = $3,
+          scheduled_at = $4,
+          status = 'pending',
+          error_message = NULL,
+          retry_count = 0,
+          updated_at = NOW()
+      WHERE id = $1 AND user_id = $2
+      RETURNING *
+    `;
+
+    const { rows } = await query(sql, [id, userId, content, scheduled_at]);
+    return rows[0] || null;
+  }
+
+  async deletePost(id, userId) {
+    const sql = `
+      DELETE FROM scheduled_posts
+      WHERE id = $1 AND user_id = $2
+      RETURNING id
+    `;
+    const { rows } = await query(sql, [id, userId]);
+    return rows[0] || null;
+  }
 }
 
 module.exports = new ScheduledPostModel();

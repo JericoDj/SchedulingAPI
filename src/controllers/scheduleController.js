@@ -178,9 +178,58 @@ const getWorkerDbHealth = asyncHandler(async (req, res) => {
   }
 });
 
+const updateScheduledPost = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  
+  const existingPost = (await scheduledPostModel.findAllByUser(req.user.id)).find(p => p.id === id);
+  if (!existingPost) {
+    res.status(404);
+    throw new Error('Scheduled post not found');
+  }
+
+  const scheduledAt = await resolveScheduledAtUtc({
+    scheduledAt: req.body.scheduled_at,
+    scheduledLocal: req.body.scheduled_local,
+    scheduleTimezone: req.body.schedule_timezone,
+  });
+  
+  const content = parseContent(req.body.content);
+  const scheduleTimezone = req.body.schedule_timezone ? ensureTimezone(req.body.schedule_timezone) : null;
+  const scheduledLocal = req.body.scheduled_local ? String(req.body.scheduled_local).trim() : null;
+
+  if (scheduleTimezone) content.schedule_timezone = scheduleTimezone;
+  if (scheduledLocal) content.scheduled_local = scheduledLocal;
+
+  const updatedPost = await scheduledPostModel.updatePost(id, req.user.id, {
+    content,
+    scheduled_at: scheduledAt,
+  });
+
+  if (!updatedPost) {
+    res.status(404);
+    throw new Error('Scheduled post not found or not authorized');
+  }
+
+  res.status(200).json(updatedPost);
+});
+
+const deleteScheduledPost = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const deletedInfo = await scheduledPostModel.deletePost(id, req.user.id);
+
+  if (!deletedInfo) {
+    res.status(404);
+    throw new Error('Scheduled post not found or not authorized');
+  }
+
+  res.status(200).json({ message: 'Scheduled post deleted' });
+});
+
 module.exports = {
   schedulePost,
   getScheduledPosts,
   runSchedulerWorker,
   getWorkerDbHealth,
+  updateScheduledPost,
+  deleteScheduledPost,
 };

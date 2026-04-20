@@ -18,6 +18,7 @@ const pinterestRoutes = require('./routes/pinterestRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const oauthRoutes = require('./routes/oauthRoutes');
 const workerRoutes = require('./routes/workerRoutes');
+const contentRoutes = require('./routes/contentRoutes');
 
 const app = express();
 
@@ -83,6 +84,7 @@ app.use('/api/pinterest-posts', pinterestRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/oauth', oauthRoutes);
 app.use('/api/worker', workerRoutes);
+app.use('/api/content', contentRoutes);
 
 
 

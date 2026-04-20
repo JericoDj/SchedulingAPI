@@ -2,8 +2,12 @@ const express = require('express');
 
 const { protect } = require('../middleware/authMiddleware');
 const facebookController = require('../controllers/facebookController');
+const { publishNow } = require('../services/facebookPublisher');
 
 const router = express.Router();
+
+// Instant publish — skips scheduling, posts directly to Facebook Graph API
+router.post('/publish-now', protect, publishNow);
 
 router.get('/', protect, facebookController.getPosts);
 router.post('/', protect, facebookController.createPost);

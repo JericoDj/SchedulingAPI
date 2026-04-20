@@ -18,6 +18,7 @@ const runSchedulerBatch = async ({ batchSize = DEFAULT_BATCH_SIZE } = {}) => {
     fetched: claimedPosts.length,
     posted: 0,
     failed: 0,
+    details: [],
   };
 
   for (const post of claimedPosts) {
@@ -26,15 +27,29 @@ const runSchedulerBatch = async ({ batchSize = DEFAULT_BATCH_SIZE } = {}) => {
         `[scheduler] processing post=${post.id} platform=${post.platform} scheduled_at=${post.scheduled_at}`
       );
 
-      await publishScheduledPost(post);
+      const publishResult = await publishScheduledPost(post);
       await scheduledPostModel.markPosted(post.id);
       result.posted += 1;
+      result.details.push({
+        id: post.id,
+        platform: post.platform,
+        status: 'posted',
+        publishResult,
+        content: post.content,
+      });
 
-      console.log(`[scheduler] posted post=${post.id}`);
+      console.log(`[scheduler] posted post=${post.id} result=${JSON.stringify(publishResult)}`);
     } catch (error) {
       const errorMessage = toErrorMessage(error);
       await scheduledPostModel.markFailed(post.id, errorMessage);
       result.failed += 1;
+      result.details.push({
+        id: post.id,
+        platform: post.platform,
+        status: 'failed',
+        error: errorMessage,
+        content: post.content,
+      });
 
       console.error(`[scheduler] failed post=${post.id} error=${errorMessage}`);
     }

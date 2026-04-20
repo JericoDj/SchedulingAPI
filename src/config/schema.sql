@@ -165,6 +165,23 @@ CREATE TABLE IF NOT EXISTS scheduled_posts (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS content_library (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  file_url TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  file_type VARCHAR(100) NOT NULL,
+  media_type VARCHAR(50) NOT NULL, -- 'image', 'video'
+  platform VARCHAR(50), -- 'facebook', 'instagram', etc.
+  format_category VARCHAR(50), -- 'portrait', 'landscape', 'square', 'tiktok', 'shorts', 'reels', etc.
+  title VARCHAR(255),
+  description TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_instagram_posts_user_id
   ON instagram_posts (user_id);
 
@@ -218,6 +235,9 @@ CREATE INDEX IF NOT EXISTS idx_pinterest_posts_schedule_status
 
 CREATE INDEX IF NOT EXISTS idx_scheduled_posts_status_scheduled_at
   ON scheduled_posts (status, scheduled_at);
+
+CREATE INDEX IF NOT EXISTS idx_content_library_user_id
+  ON content_library (user_id);
 
 DROP TRIGGER IF EXISTS set_users_updated_at ON users;
 CREATE TRIGGER set_users_updated_at
@@ -276,5 +296,11 @@ EXECUTE FUNCTION set_updated_at();
 DROP TRIGGER IF EXISTS set_scheduled_posts_updated_at ON scheduled_posts;
 CREATE TRIGGER set_scheduled_posts_updated_at
 BEFORE UPDATE ON scheduled_posts
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS set_content_library_updated_at ON content_library;
+CREATE TRIGGER set_content_library_updated_at
+BEFORE UPDATE ON content_library
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
