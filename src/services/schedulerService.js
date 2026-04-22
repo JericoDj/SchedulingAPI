@@ -28,7 +28,7 @@ const runSchedulerBatch = async ({ batchSize = DEFAULT_BATCH_SIZE } = {}) => {
       );
 
       const publishResult = await publishScheduledPost(post);
-      await scheduledPostModel.markPosted(post.id);
+      await scheduledPostModel.markPosted(post.id, publishResult?.providerPostId || null);
       result.posted += 1;
       result.details.push({
         id: post.id,

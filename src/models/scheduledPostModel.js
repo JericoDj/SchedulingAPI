@@ -53,17 +53,18 @@ class ScheduledPostModel {
     return rows;
   }
 
-  async markPosted(id) {
+  async markPosted(id, providerPostId = null) {
     const sql = `
       UPDATE scheduled_posts
       SET status = 'posted',
           error_message = NULL,
+          provider_post_id = $2,
           updated_at = NOW()
       WHERE id = $1
       RETURNING *
     `;
 
-    const { rows } = await query(sql, [id]);
+    const { rows } = await query(sql, [id, providerPostId]);
     return rows[0] || null;
   }
 

@@ -70,9 +70,10 @@ const env = {
   linkedinClientId: cleanEnvValue(process.env.LINKEDIN_CLIENT_ID),
   linkedinClientSecret: cleanEnvValue(process.env.LINKEDIN_CLIENT_SECRET),
   linkedinRedirectUri: cleanEnvValue(process.env.LINKEDIN_REDIRECT_URI),
+  linkedinVersion: cleanEnvValue(process.env.LINKEDIN_VERSION) || '202604',
   linkedinScopes: normalizeSpaceDelimitedScopes(
     process.env.LINKEDIN_SCOPES,
-    'openid profile email w_member_social r_profile_basicinfo r_verify'
+    'openid profile email w_member_social r_organization_admin w_organization_social'
   ),
   tiktokClientKey: cleanEnvValue(process.env.TIKTOK_CLIENT_KEY),
   tiktokClientSecret: cleanEnvValue(process.env.TIKTOK_CLIENT_SECRET),
@@ -93,6 +94,22 @@ const env = {
   xRedirectUri: cleanEnvValue(process.env.X_REDIRECT_URI),
   xScopes:
     process.env.X_SCOPES || 'tweet.read tweet.write users.read offline.access',
+  xConsumerKey: getFirstDefinedEnvValue(
+    'X_CONSUMER_KEY',
+    'X_API_KEY',
+    'X_OAUTH_1.0_CONSUMER_KEY'
+  ),
+  xConsumerSecret: getFirstDefinedEnvValue(
+    'X_CONSUMER_SECRET',
+    'X_CONSUMER_KEY_SECRET',
+    'X_API_KEY_SECRET',
+    'X_OAUTH_1.0_CONSUMER_KEY_SECRET'
+  ),
+  xAccessToken: cleanEnvValue(process.env.X_ACCESS_TOKEN),
+  xAccessTokenSecret: getFirstDefinedEnvValue(
+    'X_ACCESS_TOKEN_SECRET',
+    'X_ACCESS_SECRET'
+  ),
   youtubeClientId: getFirstDefinedEnvValue(
     'YOUTUBE_CLIENT_ID',
     'GOOGLE_YOUTUBE_OAUTH_SOCIALSYNC_CLIENT_ID'

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "check": "powershell -NoProfile -Command \"Get-ChildItem -Recurse -Filter *.js | ForEach-Object { node --check $_.FullName }\""
+    "check": "node -e \"const fs=require('fs');const path=require('path');const cp=require('child_process');const walk=(d)=>fs.readdirSync(d,{withFileTypes:true}).flatMap((entry)=>{const full=path.join(d,entry.name);return entry.isDirectory()?walk(full):[full];});const files=walk('src').filter((f)=>f.endsWith('.js'));for(const file of files){const result=cp.spawnSync(process.execPath,['--check',file],{stdio:'inherit'});if(result.status!==0){process.exit(result.status||1);}}console.log('Syntax check passed for '+files.length+' files.');\""
   },
   "engines": {
     "node": ">=18"
@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^2.1.1",
+    "twitter-api-v2": "^1.23.2",
     "ws": "^8.18.0"
   }
 }
