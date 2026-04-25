@@ -82,7 +82,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     const containerUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
     const containerParams = new URLSearchParams({
       access_token: accessToken,
-      upload_handle: uploadData.h || uploadData.upload_handle,
+      upload_handle: uploadId, // Use the upload_id from Step 1
       media_type: isReels ? 'REELS' : 'VIDEO',
       caption: caption,
       share_to_feed: 'true',
