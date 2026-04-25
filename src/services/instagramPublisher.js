@@ -3,6 +3,34 @@ const { graphApiVersion } = require('../config/env');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const formatInstagramGraphError = (errorPayload, fallbackMessage) => {
+  const graphError = errorPayload?.error;
+
+  if (!graphError) {
+    return fallbackMessage;
+  }
+
+  const parts = [];
+
+  if (graphError.message) {
+    parts.push(graphError.message);
+  }
+
+  if (graphError.error_user_title) {
+    parts.push(graphError.error_user_title);
+  }
+
+  if (graphError.error_user_msg) {
+    parts.push(graphError.error_user_msg);
+  }
+
+  if (graphError.code) {
+    parts.push(`code ${graphError.code}`);
+  }
+
+  return parts.join(' | ') || fallbackMessage;
+};
+
 const createInstagramContainer = async ({ instagramBusinessAccountId, accessToken, caption, mediaUrl, mediaType, isReels }) => {
   const containerUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
   const containerParams = new URLSearchParams({
@@ -14,12 +42,9 @@ const createInstagramContainer = async ({ instagramBusinessAccountId, accessToke
   }
 
   if (mediaType === 'video') {
-    containerParams.append('media_type', isReels ? 'REELS' : 'VIDEO');
+    // Instagram video publishing now goes through the REELS container flow.
+    containerParams.append('media_type', 'REELS');
     containerParams.append('video_url', mediaUrl);
-
-    if (isReels) {
-      containerParams.append('share_to_feed', 'true');
-    }
   } else {
     containerParams.append('image_url', mediaUrl);
   }
@@ -34,7 +59,7 @@ const createInstagramContainer = async ({ instagramBusinessAccountId, accessToke
   console.log('Instagram Container Data:', containerData);
 
   if (!containerRes.ok) {
-    throw new Error(containerData?.error?.message || 'Instagram container creation failed');
+    throw new Error(formatInstagramGraphError(containerData, 'Instagram container creation failed'));
   }
 
   return containerData.id;
@@ -53,7 +78,7 @@ const waitForInstagramContainer = async ({ creationId, instagramBusinessAccountI
     console.log('Instagram Container Status Data:', statusData);
 
     if (!statusRes.ok) {
-      throw new Error(statusData?.error?.message || 'Failed to fetch Instagram container status');
+      throw new Error(formatInstagramGraphError(statusData, 'Failed to fetch Instagram container status'));
     }
 
     const normalizedStatus = String(statusData.status_code || statusData.status || '').toUpperCase();
@@ -127,7 +152,8 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
   });
 
   const publishData = await publishResponse.json();
-  if (!publishResponse.ok) throw new Error(publishData?.error?.message || 'Instagram media publish failed');
+  console.log('Instagram Publish Data:', publishData);
+  if (!publishResponse.ok) throw new Error(formatInstagramGraphError(publishData, 'Instagram media publish failed'));
 
   return {
     providerPostId: publishData.id || null,
