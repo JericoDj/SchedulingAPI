@@ -157,9 +157,12 @@ const publishInstagramPost = async (post) => {
 
   const connection = await userModel.getInstagramConnection(post.user_id);
   
+  // Be lenient with key names (handle underscores, spaces, and camelCase)
   const instagramBusinessAccountId = (
     post.content.instagram_business_account_id || 
     post.content.instagramBusinessAccountId || 
+    post.content['instagram access token id'] ||
+    post.content['instagram_business_id'] ||
     connection?.instagram_business_account_id ||
     ''
   ).toString().trim();
@@ -167,6 +170,7 @@ const publishInstagramPost = async (post) => {
   const accessToken = (
     post.content.instagram_access_token || 
     post.content.instagramAccessToken || 
+    post.content['instagram access token'] ||
     connection?.instagram_access_token ||
     ''
   ).toString().trim();
