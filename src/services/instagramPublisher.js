@@ -1,6 +1,77 @@
 const userModel = require('../models/userModel');
 const { graphApiVersion } = require('../config/env');
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const createInstagramContainer = async ({ instagramBusinessAccountId, accessToken, caption, mediaUrl, mediaType, isReels }) => {
+  const containerUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
+  const containerParams = new URLSearchParams({
+    access_token: accessToken,
+  });
+
+  if (caption) {
+    containerParams.append('caption', caption);
+  }
+
+  if (mediaType === 'video') {
+    containerParams.append('media_type', isReels ? 'REELS' : 'VIDEO');
+    containerParams.append('video_url', mediaUrl);
+
+    if (isReels) {
+      containerParams.append('share_to_feed', 'true');
+    }
+  } else {
+    containerParams.append('image_url', mediaUrl);
+  }
+
+  const containerRes = await fetch(containerUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: containerParams,
+  });
+
+  const containerData = await containerRes.json();
+  console.log('Instagram Container Data:', containerData);
+
+  if (!containerRes.ok) {
+    throw new Error(containerData?.error?.message || 'Instagram container creation failed');
+  }
+
+  return containerData.id;
+};
+
+const waitForInstagramContainer = async ({ creationId, instagramBusinessAccountId, accessToken, mediaType }) => {
+  if (mediaType !== 'video') {
+    return;
+  }
+
+  const statusUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(creationId)}?fields=status_code,status&access_token=${encodeURIComponent(accessToken)}`;
+
+  for (let attempt = 0; attempt < 15; attempt += 1) {
+    const statusRes = await fetch(statusUrl, { method: 'GET' });
+    const statusData = await statusRes.json();
+    console.log('Instagram Container Status Data:', statusData);
+
+    if (!statusRes.ok) {
+      throw new Error(statusData?.error?.message || 'Failed to fetch Instagram container status');
+    }
+
+    const normalizedStatus = String(statusData.status_code || statusData.status || '').toUpperCase();
+
+    if (normalizedStatus === 'FINISHED' || normalizedStatus === 'PUBLISHED') {
+      return;
+    }
+
+    if (normalizedStatus === 'ERROR' || normalizedStatus === 'EXPIRED') {
+      throw new Error(`Instagram video processing failed with status: ${normalizedStatus}`);
+    }
+
+    await sleep(4000);
+  }
+
+  throw new Error('Instagram video is still processing. Try again in a few moments.');
+};
+
 /**
  * Core Instagram publish helper.
  * 1. Create a media container
@@ -28,109 +99,23 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
 
   let containerId;
 
-  if (mediaType === 'video') {
-    // --- DIRECT BYTE UPLOAD (RESUMABLE) FOR INSTAGRAM ---
-    
-    // 1. Initialize Upload Session
-    const initUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
-    const queryParams = new URLSearchParams({
-      access_token: accessToken,
-      upload_type: 'resumable',
-      media_type: isReels ? 'REELS' : 'VIDEO',
-    });
+  containerId = await createInstagramContainer({
+    instagramBusinessAccountId,
+    accessToken,
+    caption,
+    mediaUrl,
+    mediaType,
+    isReels,
+  });
 
-    const fullInitUrl = `${initUrl}?${queryParams.toString()}`;
-    console.log('Instagram Init URL:', fullInitUrl.split('access_token=')[0] + 'access_token=HIDDEN');
+  await waitForInstagramContainer({
+    creationId: containerId,
+    instagramBusinessAccountId,
+    accessToken,
+    mediaType,
+  });
 
-    const initRes = await fetch(fullInitUrl, { method: 'POST' });
-    const initData = await initRes.json();
-    console.log('Instagram Init Data:', initData);
-    if (!initRes.ok) throw new Error(initData?.error?.message || 'Instagram upload initialization failed');
-    
-    const uploadId = initData.upload_id || initData.id;
-    let uploadUrl = initData.uri; // Use the URI provided by Instagram
-    
-    // Some upload servers prefer the token in the URL
-    if (uploadUrl && !uploadUrl.includes('access_token')) {
-      const separator = uploadUrl.includes('?') ? '&' : '?';
-      uploadUrl += `${separator}access_token=${accessToken}`;
-    }
-
-    // 2. Download Video from Firebase
-    const videoFetch = await fetch(mediaUrl);
-    if (!videoFetch.ok) throw new Error('Failed to download video from Firebase');
-    const videoArrayBuffer = await videoFetch.arrayBuffer();
-    const videoSize = videoArrayBuffer.byteLength;
-
-    // 3. Upload Bytes to the session
-    const uploadRes = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `OAuth ${accessToken}`,
-        'Offset': '0',
-        'Content-Type': 'application/octet-stream',
-        'X-Entity-Length': videoSize.toString(),
-        'X-Entity-Type': 'video/mp4',
-        'X-Entity-Name': 'video.mp4',
-      },
-      body: videoArrayBuffer,
-    });
-    const uploadData = await uploadRes.json();
-    console.log('Instagram Byte Upload Data:', uploadData);
-    if (!uploadRes.ok) throw new Error(uploadData?.error?.message || 'Instagram byte upload failed');
-
-    // 4. Create Media Container
-    const containerUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
-    const containerParams = new URLSearchParams({
-      access_token: accessToken,
-      caption: caption || '',
-      media_type: isReels ? 'REELS' : 'VIDEO',
-      // Send multiple variations of the handle to be 100% sure
-      upload_handle: uploadId,
-      video_id: uploadId,
-      upload_id: uploadId,
-    });
-
-    if (isReels) {
-      // share_to_feed is sometimes rejected for REELS media_type, so we only add it if strictly necessary
-      // containerParams.append('share_to_feed', 'true');
-    }
-
-    const containerRes = await fetch(`${containerUrl}?${containerParams.toString()}`, {
-      method: 'POST',
-    });
-    const containerData = await containerRes.json();
-    console.log('Instagram Container Data:', containerData);
-    if (!containerRes.ok) throw new Error(containerData?.error?.message || 'Instagram container creation failed');
-    
-    containerId = containerData.id;
-
-  } else {
-    // --- URL-BASED UPLOAD FOR IMAGES (Usually works fine) ---
-    const containerUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
-    const containerParams = new URLSearchParams({
-      access_token: accessToken,
-      caption: caption || '',
-      image_url: mediaUrl,
-    });
-
-    const containerRes = await fetch(containerUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: containerParams,
-    });
-    const containerData = await containerRes.json();
-    if (!containerRes.ok) throw new Error(containerData?.error?.message || 'Instagram image container creation failed');
-    
-    containerId = containerData.id;
-  }
-
-  // 5. Wait a bit for processing
-  if (mediaType === 'video') {
-    await new Promise((resolve) => setTimeout(resolve, 8000));
-  }
-
-  // 6. Publish Container
+  // 3. Publish Container
   const publishUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media_publish`;
   const publishParams = new URLSearchParams({
     access_token: accessToken,
