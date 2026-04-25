@@ -83,11 +83,18 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     const containerUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
     const containerParams = new URLSearchParams({
       access_token: accessToken,
-      upload_handle: uploadId, // Use the upload_id from Step 1
+      caption: caption || '',
       media_type: isReels ? 'REELS' : 'VIDEO',
-      caption: caption,
-      share_to_feed: 'true',
+      // Send multiple variations of the handle to be 100% sure
+      upload_handle: uploadId,
+      video_id: uploadId,
+      upload_id: uploadId,
     });
+
+    if (isReels) {
+      // share_to_feed is sometimes rejected for REELS media_type, so we only add it if strictly necessary
+      // containerParams.append('share_to_feed', 'true');
+    }
 
     const containerRes = await fetch(`${containerUrl}?${containerParams.toString()}`, {
       method: 'POST',
