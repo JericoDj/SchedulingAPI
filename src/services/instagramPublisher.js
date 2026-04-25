@@ -49,6 +49,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     if (!initRes.ok) throw new Error(initData?.error?.message || 'Instagram upload initialization failed');
     
     const uploadId = initData.upload_id;
+    const uploadUrl = initData.uri; // Use the URI provided by Instagram
 
     // 2. Download Video from Firebase
     const videoFetch = await fetch(mediaUrl);
@@ -56,7 +57,6 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     const videoBlob = await videoFetch.blob();
 
     // 3. Upload Bytes to the session
-    const uploadUrl = `https://graph.facebook.com/${graphApiVersion}/${uploadId}`;
     const uploadRes = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
