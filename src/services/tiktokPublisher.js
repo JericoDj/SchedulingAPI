@@ -6,14 +6,13 @@ const userModel = require('../models/userModel');
  *
  * @param {object} opts
  * @param {string} opts.accessToken
- * @param {string} opts.openId
  * @param {string} opts.videoUrl
  * @param {string} opts.title
  * @returns {Promise<{providerPostId: string|null}>}
  */
-const postToTikTok = async ({ accessToken, openId, videoUrl, title }) => {
-  if (!accessToken || !openId) {
-    throw new Error('Missing TikTok credentials');
+const postToTikTok = async ({ accessToken, videoUrl, title }) => {
+  if (!accessToken) {
+    throw new Error('Missing TikTok access token');
   }
 
   if (!videoUrl) {
@@ -31,7 +30,7 @@ const postToTikTok = async ({ accessToken, openId, videoUrl, title }) => {
       video_ad_tag: false,
     },
     source_info: {
-      source_type: 'PULL_FROM_URL',
+      source: 'PULL_FROM_URL',
       video_url: videoUrl,
     },
   };
@@ -40,7 +39,7 @@ const postToTikTok = async ({ accessToken, openId, videoUrl, title }) => {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=UTF-8',
     },
     body: JSON.stringify(body),
   });
@@ -48,7 +47,12 @@ const postToTikTok = async ({ accessToken, openId, videoUrl, title }) => {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data?.error?.message || data?.message || 'TikTok post failed');
+    const details =
+      data?.error?.message ||
+      data?.message ||
+      data?.error?.code ||
+      'TikTok post failed';
+    throw new Error(details);
   }
 
   return {
@@ -68,9 +72,6 @@ const publishTikTokPost = async (post) => {
   const accessToken = String(
     post.content.tiktok_access_token || connection?.tiktok_access_token || ''
   ).trim();
-  const openId = String(
-    post.content.tiktok_open_id || connection?.tiktok_open_id || ''
-  ).trim();
 
   const title = String(
     post.content.title || post.content.message || post.content.description || ''
@@ -78,7 +79,7 @@ const publishTikTokPost = async (post) => {
 
   const videoUrl = String(post.content.media_url || post.content.mediaUrl || '').trim();
 
-  return postToTikTok({ accessToken, openId, videoUrl, title });
+  return postToTikTok({ accessToken, videoUrl, title });
 };
 
 module.exports = {
