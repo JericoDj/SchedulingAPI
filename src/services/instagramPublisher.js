@@ -39,9 +39,10 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
       media_type: isReels ? 'REELS' : 'VIDEO',
     });
 
-    const initRes = await fetch(`${initUrl}?${queryParams.toString()}`, { 
-      method: 'POST',
-    });
+    const fullInitUrl = `${initUrl}?${queryParams.toString()}`;
+    console.log('Instagram Init URL:', fullInitUrl.split('access_token=')[0] + 'access_token=HIDDEN');
+
+    const initRes = await fetch(fullInitUrl, { method: 'POST' });
     const initData = await initRes.json();
     console.log('Instagram Init Data:', initData);
     if (!initRes.ok) throw new Error(initData?.error?.message || 'Instagram upload initialization failed');
