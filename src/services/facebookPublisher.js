@@ -29,10 +29,18 @@ const postToFacebook = async ({ pageId, pageAccessToken, message, mediaUrl, medi
   let endpoint;
 
   if (mediaUrl && mediaType === 'video') {
-    // Video post
-    endpoint = 'videos';
-    body.append('url', mediaUrl);
-    if (message) body.append('caption', message);
+    if (opts.isReels) {
+      // Facebook Reels post
+      endpoint = 'video_reels';
+      body.append('video_state', 'PUBLISHED');
+      body.append('description', message);
+      body.append('file_url', mediaUrl);
+    } else {
+      // Standard Video post
+      endpoint = 'videos';
+      body.append('url', mediaUrl);
+      if (message) body.append('caption', message);
+    }
   } else if (mediaUrl) {
     // Photo post
     endpoint = 'photos';
@@ -86,8 +94,9 @@ const publishFacebookPost = async (post) => {
 
   const mediaUrl = String(post.content.media_url || post.content.mediaUrl || '').trim();
   const mediaType = String(post.content.media_type || '').trim().toLowerCase();
+  const isReels = !!post.content.is_reels;
 
-  return postToFacebook({ pageId, pageAccessToken, message, mediaUrl, mediaType });
+  return postToFacebook({ pageId, pageAccessToken, message, mediaUrl, mediaType, isReels });
 };
 
 /**
@@ -116,6 +125,7 @@ const publishNow = async (req, res, next) => {
       message: String(message || '').trim(),
       mediaUrl: String(media_url || '').trim(),
       mediaType: String(media_type || '').trim().toLowerCase(),
+      isReels: !!req.body.is_reels,
     });
 
     res.status(200).json({

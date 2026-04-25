@@ -62,7 +62,13 @@ const ensureSocialColumns = async () => {
     ADD COLUMN IF NOT EXISTS x_user_id VARCHAR(255),
     ADD COLUMN IF NOT EXISTS x_username VARCHAR(255),
     ADD COLUMN IF NOT EXISTS x_access_token TEXT,
-    ADD COLUMN IF NOT EXISTS x_token_updated_at TIMESTAMPTZ
+    ADD COLUMN IF NOT EXISTS x_token_updated_at TIMESTAMPTZ,
+
+    ADD COLUMN IF NOT EXISTS youtube_access_token TEXT,
+    ADD COLUMN IF NOT EXISTS youtube_refresh_token TEXT,
+    ADD COLUMN IF NOT EXISTS youtube_channel_id VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS youtube_username VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS youtube_token_updated_at TIMESTAMPTZ
   `);
 
   socialColumnsEnsured = true;
@@ -398,6 +404,29 @@ const userModel = {
   async getXConnection(userId) {
     await ensureSocialColumns();
     const sql = `SELECT id, x_access_token, x_user_id, x_username FROM users WHERE id = $1`;
+    const { rows } = await query(sql, [userId]);
+    return rows[0] || null;
+  },
+
+  async saveYouTubeConnection(userId, { accessToken, refreshToken, channelId, username }) {
+    await ensureSocialColumns();
+    const sql = `
+      UPDATE users
+      SET youtube_access_token = $2,
+          youtube_refresh_token = $3,
+          youtube_channel_id = $4,
+          youtube_username = $5,
+          youtube_token_updated_at = NOW()
+      WHERE id = $1
+      RETURNING ${publicUserFields}
+    `;
+    const { rows } = await query(sql, [userId, accessToken, refreshToken, channelId, username]);
+    return rows[0] || null;
+  },
+
+  async getYouTubeConnection(userId) {
+    await ensureSocialColumns();
+    const sql = `SELECT id, youtube_access_token, youtube_refresh_token, youtube_channel_id, youtube_username, youtube_token_updated_at FROM users WHERE id = $1`;
     const { rows } = await query(sql, [userId]);
     return rows[0] || null;
   },

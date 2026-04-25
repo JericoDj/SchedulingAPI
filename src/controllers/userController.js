@@ -600,6 +600,51 @@ const connectX = asyncHandler(async (req, res) => {
   });
 });
 
+const connectYouTube = asyncHandler(async (req, res) => {
+  const { access_token, refresh_token } = req.body;
+
+  if (!access_token) {
+    res.status(400);
+    throw new Error('access_token is required');
+  }
+
+  const channelResp = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    },
+  });
+  const channelData = await channelResp.json();
+
+  if (!channelResp.ok) {
+    res.status(channelResp.status || 400);
+    throw new Error(
+      channelData?.error?.message || 'Failed to fetch YouTube channel profile'
+    );
+  }
+
+  const channel = channelData.items && channelData.items[0];
+  if (!channel) {
+    res.status(404);
+    throw new Error('No YouTube channel found for this account. Please create a channel first.');
+  }
+
+  const updatedUser = await userModel.saveYouTubeConnection(req.user.id, {
+    accessToken: access_token,
+    refreshToken: refresh_token || null,
+    channelId: channel.id,
+    username: channel.snippet?.title || null,
+  });
+
+  res.status(200).json({
+    message: 'YouTube connection saved',
+    channel: {
+      id: channel.id,
+      title: channel.snippet?.title,
+    },
+    user: updatedUser,
+  });
+});
+
 module.exports = {
   createUser,
   getUsers,
@@ -612,6 +657,7 @@ module.exports = {
   connectThreads,
   connectX,
   connectLinkedIn,
+  connectYouTube,
   getLinkedInPages,
   setLinkedInTarget,
 };

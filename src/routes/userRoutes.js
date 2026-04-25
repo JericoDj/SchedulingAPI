@@ -15,6 +15,7 @@ const {
   getUsers,
   setLinkedInTarget,
   updateUser,
+  connectYouTube,
 } = require('../controllers/userController');
 
 
@@ -29,6 +30,7 @@ router.post('/me/linkedin-target', protect, setLinkedInTarget);
 router.post('/me/tiktok-connection', protect, connectTikTok);
 router.post('/me/threads-connection', protect, connectThreads);
 router.post('/me/x-connection', protect, connectX);
+router.post('/me/youtube-connection', protect, connectYouTube);
 router.post('/', createUser);
 router.get('/:id', protect, getUserById);
 router.put('/:id', protect, updateUser);

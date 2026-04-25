@@ -31,7 +31,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
   });
 
   if (mediaType === 'video') {
-    containerParams.append('media_type', 'VIDEO');
+    containerParams.append('media_type', opts.isReels ? 'REELS' : 'VIDEO');
     containerParams.append('video_url', mediaUrl);
   } else {
     containerParams.append('image_url', mediaUrl);
@@ -103,8 +103,9 @@ const publishInstagramPost = async (post) => {
 
   const mediaUrl = String(post.content.media_url || post.content.mediaUrl || '').trim();
   const mediaType = String(post.content.media_type || '').trim().toLowerCase();
+  const isReels = !!post.content.is_reels;
 
-  return postToInstagram({ instagramBusinessAccountId, accessToken, caption, mediaUrl, mediaType });
+  return postToInstagram({ instagramBusinessAccountId, accessToken, caption, mediaUrl, mediaType, isReels });
 };
 
 module.exports = {

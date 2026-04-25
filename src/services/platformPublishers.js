@@ -5,6 +5,7 @@ const { publishTikTokPost } = require('./tiktokPublisher');
 const { publishThreadsPost } = require('./threadsPublisher');
 const { publishXPost } = require('./xPublisher');
 const { publishLinkedInPost } = require('./linkedinPublisher');
+const { publishYouTubePost } = require('./youtubePublisher');
 
 const publishUsingExistingFlow = async (post) => {
   if (!post.content || typeof post.content !== 'object' || Array.isArray(post.content)) {
@@ -23,7 +24,7 @@ const publishers = {
   linkedin: publishLinkedInPost,
   threads: publishThreadsPost,
   x: publishXPost,
-  youtube: publishUsingExistingFlow,
+  youtube: publishYouTubePost,
   pinterest: publishUsingExistingFlow,
 };
 
