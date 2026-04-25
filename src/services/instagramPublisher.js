@@ -33,7 +33,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     const initBody = new URLSearchParams({
       access_token: accessToken,
       upload_type: 'resumable',
-      media_type: isReels ? 'REELS' : 'VIDEO',
+      media_type: 'VIDEO', // Resumable initialization requires 'VIDEO'
     });
 
     const initRes = await fetch(initUrl, { 
