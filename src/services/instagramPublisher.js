@@ -61,6 +61,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     const videoFetch = await fetch(mediaUrl);
     if (!videoFetch.ok) throw new Error('Failed to download video from Firebase');
     const videoArrayBuffer = await videoFetch.arrayBuffer();
+    const videoSize = videoArrayBuffer.byteLength;
 
     // 3. Upload Bytes to the session
     const uploadRes = await fetch(uploadUrl, {
@@ -69,6 +70,9 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
         'Authorization': `OAuth ${accessToken}`,
         'Offset': '0',
         'Content-Type': 'application/octet-stream',
+        'X-Entity-Length': videoSize.toString(),
+        'X-Entity-Type': 'video/mp4',
+        'X-Entity-Name': 'video.mp4',
       },
       body: videoArrayBuffer,
     });
