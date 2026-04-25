@@ -67,7 +67,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
       method: 'POST',
       headers: {
         'Authorization': `OAuth ${accessToken}`,
-        'file_offset': '0',
+        'Offset': '0',
         'Content-Type': 'application/octet-stream',
       },
       body: videoArrayBuffer,
