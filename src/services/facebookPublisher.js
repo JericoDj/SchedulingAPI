@@ -29,17 +29,14 @@ const postToFacebook = async ({ pageId, pageAccessToken, message, mediaUrl, medi
   let endpoint;
 
   if (mediaUrl && mediaType === 'video') {
+    // Standard Video / Reel post
+    endpoint = 'videos';
+    body.append('url', mediaUrl);
+    if (message) body.append('description', message); // Videos use 'description' instead of 'caption' in many contexts
+    
     if (isReels) {
-      // Facebook Reels post
-      endpoint = 'video_reels';
-      body.append('video_state', 'PUBLISHED');
-      body.append('description', message);
-      body.append('file_url', mediaUrl);
-    } else {
-      // Standard Video post
-      endpoint = 'videos';
-      body.append('url', mediaUrl);
-      if (message) body.append('caption', message);
+      body.append('reel', '1');
+      body.append('allow_reels_destination', '1');
     }
   } else if (mediaUrl) {
     // Photo post
