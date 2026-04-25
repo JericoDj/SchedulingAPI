@@ -29,7 +29,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     // --- DIRECT BYTE UPLOAD (RESUMABLE) FOR INSTAGRAM ---
     
     // 1. Initialize Upload Session
-    const initUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media_upload`;
+    const initUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
     const initParams = new URLSearchParams({
       access_token: accessToken,
       upload_type: 'resumable',
