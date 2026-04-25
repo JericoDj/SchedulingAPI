@@ -150,13 +150,19 @@ const publishInstagramPost = async (post) => {
 
   const connection = await userModel.getInstagramConnection(post.user_id);
   
-  const instagramBusinessAccountId = post.content.instagram_business_account_id 
-    || post.content.instagramBusinessAccountId 
-    || connection?.instagram_business_account_id;
+  const instagramBusinessAccountId = (
+    post.content.instagram_business_account_id || 
+    post.content.instagramBusinessAccountId || 
+    connection?.instagram_business_account_id ||
+    ''
+  ).toString().trim();
 
-  const accessToken = post.content.instagram_access_token 
-    || post.content.instagramAccessToken 
-    || connection?.instagram_access_token;
+  const accessToken = (
+    post.content.instagram_access_token || 
+    post.content.instagramAccessToken || 
+    connection?.instagram_access_token ||
+    ''
+  ).toString().trim();
 
   const caption = String(
     post.content.caption || post.content.message || post.content.description || ''

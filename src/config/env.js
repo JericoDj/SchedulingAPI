@@ -48,7 +48,7 @@ const env = {
   jwtSecret: cleanEnvValue(process.env.JWT_SECRET),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   clientUrl: cleanEnvValue(process.env.CLIENT_URL) || '*',
-  graphApiVersion: process.env.GRAPH_API_VERSION || 'v24.0',
+  graphApiVersion: process.env.GRAPH_API_VERSION || 'v19.0',
   facebookAppId: cleanEnvValue(process.env.FACEBOOK_APP_ID),
   facebookAppSecret: cleanEnvValue(process.env.FACEBOOK_APP_SECRET),
   facebookRedirectUri: cleanEnvValue(process.env.FACEBOOK_REDIRECT_URI),
