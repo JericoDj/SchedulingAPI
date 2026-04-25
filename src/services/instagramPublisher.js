@@ -15,8 +15,11 @@ const { graphApiVersion } = require('../config/env');
  * @returns {Promise<{providerPostId: string|null, instagramBusinessAccountId: string}>}
  */
 const postToInstagram = async ({ instagramBusinessAccountId, accessToken, caption, mediaUrl, mediaType, isReels }) => {
-  if (!instagramBusinessAccountId || !accessToken) {
-    throw new Error('Missing Instagram credentials');
+  if (!instagramBusinessAccountId || instagramBusinessAccountId === 'undefined' || instagramBusinessAccountId === '') {
+    throw new Error('Missing or invalid Instagram Business Account ID');
+  }
+  if (!accessToken) {
+    throw new Error('Missing Instagram access token');
   }
 
   if (!mediaUrl) {
@@ -146,12 +149,14 @@ const publishInstagramPost = async (post) => {
   }
 
   const connection = await userModel.getInstagramConnection(post.user_id);
-  const instagramBusinessAccountId = String(
-    post.content.instagram_business_account_id || connection?.instagram_business_account_id || ''
-  ).trim();
-  const accessToken = String(
-    post.content.instagram_access_token || connection?.instagram_access_token || ''
-  ).trim();
+  
+  const instagramBusinessAccountId = post.content.instagram_business_account_id 
+    || post.content.instagramBusinessAccountId 
+    || connection?.instagram_business_account_id;
+
+  const accessToken = post.content.instagram_access_token 
+    || post.content.instagramAccessToken 
+    || connection?.instagram_access_token;
 
   const caption = String(
     post.content.caption || post.content.message || post.content.description || ''
