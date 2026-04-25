@@ -33,16 +33,14 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     
     // 1. Initialize Upload Session
     const initUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
-    const initBody = new URLSearchParams({
+    const queryParams = new URLSearchParams({
       access_token: accessToken,
       upload_type: 'resumable',
       media_type: isReels ? 'REELS' : 'VIDEO',
     });
 
-    const initRes = await fetch(initUrl, { 
+    const initRes = await fetch(`${initUrl}?${queryParams.toString()}`, { 
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: initBody,
     });
     const initData = await initRes.json();
     console.log('Instagram Init Data:', initData);
@@ -80,23 +78,18 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     console.log('Instagram Byte Upload Data:', uploadData);
     if (!uploadRes.ok) throw new Error(uploadData?.error?.message || 'Instagram byte upload failed');
 
-    // 4. Create Media Container from Uploaded Handle
+    // 4. Create Media Container
     const containerUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
     const containerParams = new URLSearchParams({
       access_token: accessToken,
-      caption: caption || '',
+      upload_handle: uploadData.h || uploadData.upload_handle,
       media_type: isReels ? 'REELS' : 'VIDEO',
-      upload_handle: uploadData.h,
+      caption: caption,
+      share_to_feed: 'true',
     });
-    
-    if (isReels) {
-      containerParams.append('share_to_feed', 'true');
-    }
 
-    const containerRes = await fetch(containerUrl, {
+    const containerRes = await fetch(`${containerUrl}?${containerParams.toString()}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: containerParams,
     });
     const containerData = await containerRes.json();
     console.log('Instagram Container Data:', containerData);
@@ -136,10 +129,8 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     creation_id: containerId,
   });
 
-  const publishResponse = await fetch(publishUrl, {
+  const publishResponse = await fetch(`${publishUrl}?${publishParams.toString()}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: publishParams,
   });
 
   const publishData = await publishResponse.json();
