@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 
 const { clientUrl, deployment, nodeEnv } = require('./config/env');
+const { runMigrations } = require('./config/migrations');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -21,6 +22,10 @@ const workerRoutes = require('./routes/workerRoutes');
 const contentRoutes = require('./routes/contentRoutes');
 
 const app = express();
+
+runMigrations().catch((error) => {
+  console.error('[DB] Failed to initialize migrations during app startup:', error.message);
+});
 
 const configuredOrigins = String(clientUrl || '')
   .split(',')
