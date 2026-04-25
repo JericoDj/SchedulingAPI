@@ -42,6 +42,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
       body: initBody,
     });
     const initData = await initRes.json();
+    console.log('Instagram Init Data:', initData);
     if (!initRes.ok) throw new Error(initData?.error?.message || 'Instagram upload initialization failed');
     
     const uploadId = initData.upload_id;
@@ -62,6 +63,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
       body: videoBlob,
     });
     const uploadData = await uploadRes.json();
+    console.log('Instagram Byte Upload Data:', uploadData);
     if (!uploadRes.ok) throw new Error(uploadData?.error?.message || 'Instagram byte upload failed');
 
     // 4. Create Media Container from Uploaded Handle
@@ -72,6 +74,10 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
       media_type: isReels ? 'REELS' : 'VIDEO',
       upload_handle: uploadData.h,
     });
+    
+    if (isReels) {
+      containerParams.append('share_to_feed', 'true');
+    }
 
     const containerRes = await fetch(containerUrl, {
       method: 'POST',
@@ -79,6 +85,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
       body: containerParams,
     });
     const containerData = await containerRes.json();
+    console.log('Instagram Container Data:', containerData);
     if (!containerRes.ok) throw new Error(containerData?.error?.message || 'Instagram container creation failed');
     
     containerId = containerData.id;
