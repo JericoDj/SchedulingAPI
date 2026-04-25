@@ -14,7 +14,7 @@ const { graphApiVersion } = require('../config/env');
  * @param {string} [opts.mediaType] 'image' | 'video'
  * @returns {Promise<{providerPostId: string|null, instagramBusinessAccountId: string}>}
  */
-const postToInstagram = async ({ instagramBusinessAccountId, accessToken, caption, mediaUrl, mediaType }) => {
+const postToInstagram = async ({ instagramBusinessAccountId, accessToken, caption, mediaUrl, mediaType, isReels }) => {
   if (!instagramBusinessAccountId || !accessToken) {
     throw new Error('Missing Instagram credentials');
   }
@@ -31,7 +31,7 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
   });
 
   if (mediaType === 'video') {
-    containerParams.append('media_type', opts.isReels ? 'REELS' : 'VIDEO');
+    containerParams.append('media_type', isReels ? 'REELS' : 'VIDEO');
     containerParams.append('video_url', mediaUrl);
   } else {
     containerParams.append('image_url', mediaUrl);

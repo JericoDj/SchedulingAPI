@@ -16,7 +16,7 @@ const { graphApiVersion } = require('../config/env');
  * @param {string} [opts.mediaType]     'image' | 'video'
  * @returns {Promise<{providerPostId: string|null, pageId: string, endpoint: string}>}
  */
-const postToFacebook = async ({ pageId, pageAccessToken, message, mediaUrl, mediaType }) => {
+const postToFacebook = async ({ pageId, pageAccessToken, message, mediaUrl, mediaType, isReels }) => {
   if (!pageId || !pageAccessToken) {
     throw new Error('Missing Facebook page credentials');
   }
@@ -29,7 +29,7 @@ const postToFacebook = async ({ pageId, pageAccessToken, message, mediaUrl, medi
   let endpoint;
 
   if (mediaUrl && mediaType === 'video') {
-    if (opts.isReels) {
+    if (isReels) {
       // Facebook Reels post
       endpoint = 'video_reels';
       body.append('video_state', 'PUBLISHED');
