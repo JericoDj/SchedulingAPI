@@ -23,7 +23,7 @@ const tiktokAuth = (req, res) => {
   const callbackRedirect = getCallbackRedirect(req);
   const nonce = crypto.randomBytes(8).toString('hex');
   const codeVerifier = crypto.randomBytes(32).toString('hex');
-  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('hex');
+  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
   const state = toState({
     nonce,
     redirect: callbackRedirect || undefined,
@@ -91,4 +91,3 @@ module.exports = {
   tiktokAuth,
   tiktokCallback,
 };
-

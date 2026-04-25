@@ -71,6 +71,9 @@ const buildFrontendSuccessRedirect = (frontendRedirect, provider, tokenData) => 
   redirectUrl.searchParams.set('access_token', tokenData.access_token || '');
   redirectUrl.searchParams.set('token_type', tokenData.token_type || '');
   redirectUrl.searchParams.set('expires_in', String(tokenData.expires_in || ''));
+  if (tokenData.refresh_token) {
+    redirectUrl.searchParams.set('refresh_token', tokenData.refresh_token);
+  }
   return redirectUrl.toString();
 };
 
@@ -407,4 +410,3 @@ module.exports = {
   exchangePinterestCodeForToken,
   decodeThreadsSignedRequest,
 };
-
