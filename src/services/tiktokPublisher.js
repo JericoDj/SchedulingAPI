@@ -11,7 +11,7 @@ const userModel = require('../models/userModel');
  * @param {string} opts.title
  * @returns {Promise<{providerPostId: string|null}>}
  */
-const postToTikTok = async ({ accessToken, videoUrl, title }) => {
+const postToTikTok = async ({ accessToken, videoUrl, title, privacyLevel }) => {
   if (!accessToken) {
     throw new Error('Missing TikTok access token');
   }
@@ -47,7 +47,7 @@ const postToTikTok = async ({ accessToken, videoUrl, title }) => {
   const initBody = {
     post_info: {
       title: title || '',
-      privacy_level: 'PUBLIC_TO_EVERYONE',
+      privacy_level: privacyLevel || 'SELF_ONLY',
       disable_duet: false,
       disable_stitch: false,
       disable_comment: false,
@@ -136,8 +136,9 @@ const publishTikTokPost = async (post) => {
   ).trim();
 
   const videoUrl = String(post.content.media_url || post.content.mediaUrl || '').trim();
+  const privacyLevel = post.content.privacy_level || 'SELF_ONLY';
 
-  return postToTikTok({ accessToken, videoUrl, title });
+  return postToTikTok({ accessToken, videoUrl, title, privacyLevel });
 };
 
 module.exports = {
