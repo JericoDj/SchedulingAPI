@@ -30,12 +30,17 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     
     // 1. Initialize Upload Session
     const initUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(instagramBusinessAccountId)}/media`;
-    const initParams = new URLSearchParams({
+    const initBody = new URLSearchParams({
       access_token: accessToken,
       upload_type: 'resumable',
+      media_type: isReels ? 'REELS' : 'VIDEO',
     });
 
-    const initRes = await fetch(`${initUrl}?${initParams.toString()}`, { method: 'POST' });
+    const initRes = await fetch(initUrl, { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: initBody,
+    });
     const initData = await initRes.json();
     if (!initRes.ok) throw new Error(initData?.error?.message || 'Instagram upload initialization failed');
     
