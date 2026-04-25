@@ -48,8 +48,14 @@ const postToInstagram = async ({ instagramBusinessAccountId, accessToken, captio
     console.log('Instagram Init Data:', initData);
     if (!initRes.ok) throw new Error(initData?.error?.message || 'Instagram upload initialization failed');
     
-    const uploadId = initData.upload_id;
-    const uploadUrl = initData.uri; // Use the URI provided by Instagram
+    const uploadId = initData.upload_id || initData.id;
+    let uploadUrl = initData.uri; // Use the URI provided by Instagram
+    
+    // Some upload servers prefer the token in the URL
+    if (uploadUrl && !uploadUrl.includes('access_token')) {
+      const separator = uploadUrl.includes('?') ? '&' : '?';
+      uploadUrl += `${separator}access_token=${accessToken}`;
+    }
 
     // 2. Download Video from Firebase
     const videoFetch = await fetch(mediaUrl);
