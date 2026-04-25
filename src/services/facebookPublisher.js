@@ -25,37 +25,61 @@ const postToFacebook = async ({ pageId, pageAccessToken, message, mediaUrl, medi
     throw new Error('Facebook post requires at least a message or media URL');
   }
 
-  const body = new URLSearchParams({ access_token: pageAccessToken });
+  let response;
   let endpoint;
 
   if (mediaUrl && mediaType === 'video') {
-    // Standard Video / Reel post
     endpoint = 'videos';
-    body.append('url', mediaUrl);
-    if (message) body.append('description', message); // Videos use 'description' instead of 'caption' in many contexts
+    const graphUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(pageId)}/${endpoint}`;
+
+    // 1. Download the video from Firebase to our server memory
+    const videoFetch = await fetch(mediaUrl);
+    if (!videoFetch.ok) throw new Error('Failed to download video from Firebase');
+    const videoBlob = await videoFetch.blob();
+
+    // 2. Prepare Multipart Form Data
+    const formData = new FormData();
+    formData.append('access_token', pageAccessToken);
+    formData.append('source', videoBlob, 'video.mp4');
+    if (message) formData.append('description', message);
     
     if (isReels) {
-      body.append('reel', '1');
-      body.append('allow_reels_destination', '1');
+      formData.append('reel', '1');
+      formData.append('allow_reels_destination', '1');
+      formData.append('published', 'true');
+    } else {
+      formData.append('published', 'true');
     }
-  } else if (mediaUrl) {
-    // Photo post
-    endpoint = 'photos';
-    body.append('url', mediaUrl);
-    if (message) body.append('caption', message);
+
+    // 3. Upload bytes to Facebook
+    response = await fetch(graphUrl, {
+      method: 'POST',
+      body: formData,
+    });
   } else {
-    // Text-only feed post
-    endpoint = 'feed';
-    body.append('message', message);
+    // Photo or Text post remains URL-based
+    if (mediaUrl) {
+      endpoint = 'photos';
+    } else {
+      endpoint = 'feed';
+    }
+
+    const body = new URLSearchParams({ access_token: pageAccessToken });
+    if (mediaUrl) {
+      body.append('url', mediaUrl);
+      if (message) body.append('caption', message);
+    } else {
+      body.append('message', message);
+    }
+    
+    const graphUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(pageId)}/${endpoint}`;
+    
+    response = await fetch(graphUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
   }
-
-  const graphUrl = `https://graph.facebook.com/${graphApiVersion}/${encodeURIComponent(pageId)}/${endpoint}`;
-
-  const response = await fetch(graphUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
 
   const data = await response.json();
 
