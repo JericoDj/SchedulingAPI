@@ -118,6 +118,21 @@ const schedulePost = asyncHandler(async (req, res) => {
     }
   }
 
+  if (platform === 'threads') {
+    const connection = await userModel.getThreadsConnection(req.user.id);
+    const hasInlineCredentials =
+      !!content.threads_user_id && !!content.threads_access_token;
+    const hasSavedCredentials =
+      !!connection?.threads_user_id && !!connection?.threads_access_token;
+
+    if (!hasInlineCredentials && !hasSavedCredentials) {
+      res.status(400);
+      throw new Error(
+        'Threads scheduling requires a connected Threads account. Connect Threads in Settings first.'
+      );
+    }
+  }
+
   if (scheduleTimezone) {
     content.schedule_timezone = scheduleTimezone;
   }

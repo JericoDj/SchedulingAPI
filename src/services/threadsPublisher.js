@@ -1,5 +1,70 @@
 const userModel = require('../models/userModel');
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const formatThreadsError = (errorPayload, fallbackMessage) => {
+  const apiError = errorPayload?.error;
+
+  if (!apiError) {
+    return fallbackMessage;
+  }
+
+  const parts = [];
+
+  if (apiError.message) {
+    parts.push(apiError.message);
+  }
+
+  if (apiError.error_user_title) {
+    parts.push(apiError.error_user_title);
+  }
+
+  if (apiError.error_user_msg) {
+    parts.push(apiError.error_user_msg);
+  }
+
+  if (apiError.code) {
+    parts.push(`code ${apiError.code}`);
+  }
+
+  return parts.join(' | ') || fallbackMessage;
+};
+
+const waitForThreadsContainer = async ({ containerId, accessToken, hasMedia }) => {
+  if (!hasMedia) {
+    return;
+  }
+
+  const statusUrl = `https://graph.threads.net/v1.0/${encodeURIComponent(containerId)}?fields=id,status,error_message&access_token=${encodeURIComponent(accessToken)}`;
+
+  for (let attempt = 0; attempt < 15; attempt += 1) {
+    const statusResponse = await fetch(statusUrl, { method: 'GET' });
+    const statusData = await statusResponse.json();
+    console.log('Threads Container Status Data:', statusData);
+
+    if (!statusResponse.ok) {
+      throw new Error(formatThreadsError(statusData, 'Failed to fetch Threads container status'));
+    }
+
+    const normalizedStatus = String(statusData.status || '').toUpperCase();
+
+    if (normalizedStatus === 'FINISHED' || normalizedStatus === 'PUBLISHED') {
+      return;
+    }
+
+    if (normalizedStatus === 'ERROR' || normalizedStatus === 'EXPIRED') {
+      const errorMessage = statusData.error_message
+        ? `Threads media processing failed: ${statusData.error_message}`
+        : `Threads media processing failed with status: ${normalizedStatus}`;
+      throw new Error(errorMessage);
+    }
+
+    await sleep(4000);
+  }
+
+  throw new Error('Threads media is still processing. Try again in a few moments.');
+};
+
 /**
  * Core Threads publish helper.
  * 1. Create a media container (or text container)
@@ -50,17 +115,19 @@ const postToThreads = async ({ threadsUserId, accessToken, text, mediaUrl, media
   });
 
   const containerData = await containerResponse.json();
+  console.log('Threads Container Data:', containerData);
 
   if (!containerResponse.ok) {
-    throw new Error(containerData?.error?.message || 'Threads container creation failed');
+    throw new Error(formatThreadsError(containerData, 'Threads container creation failed'));
   }
 
   const containerId = containerData.id;
 
-  // Wait a bit for processing if media is involved
-  if (mediaUrl) {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-  }
+  await waitForThreadsContainer({
+    containerId,
+    accessToken,
+    hasMedia: !!mediaUrl,
+  });
 
   // 2. Publish Container
   const publishUrl = `https://graph.threads.net/v1.0/${encodeURIComponent(threadsUserId)}/threads_publish`;
@@ -76,9 +143,10 @@ const postToThreads = async ({ threadsUserId, accessToken, text, mediaUrl, media
   });
 
   const publishData = await publishResponse.json();
+  console.log('Threads Publish Data:', publishData);
 
   if (!publishResponse.ok) {
-    throw new Error(publishData?.error?.message || 'Threads publish failed');
+    throw new Error(formatThreadsError(publishData, 'Threads publish failed'));
   }
 
   return {
