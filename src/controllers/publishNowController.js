@@ -3,7 +3,7 @@ const { publishScheduledPost } = require('../services/platformPublishers');
 const { query } = require('../config/db');
 
 const publishNow = asyncHandler(async (req, res) => {
-  const { platform, content, media_url, media_type } = req.body;
+  const { platform, content, media_url, media_type, is_reels, is_shorts } = req.body;
 
   console.log('[PublishNow] Incoming request:', {
     platform,
@@ -32,6 +32,8 @@ const publishNow = asyncHandler(async (req, res) => {
       description: content,
       media_url: media_url || null,
       media_type: media_type || null,
+      is_reels: !!is_reels,
+      is_shorts: !!is_shorts,
       ...req.body.extra_content,
     },
   };
