@@ -74,11 +74,12 @@ const postToTikTok = async ({ accessToken, videoUrl, title }) => {
   const initData = await initResp.json();
 
   if (!initResp.ok) {
+    console.error('[TikTok] Init failed:', initData);
     const details =
       initData?.error?.message ||
       initData?.message ||
       initData?.error?.code ||
-      'TikTok init failed';
+      `TikTok init failed with status ${initResp.status}`;
     throw new Error(details);
   }
 
